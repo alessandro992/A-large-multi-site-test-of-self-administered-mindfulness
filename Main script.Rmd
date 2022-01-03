@@ -8,6 +8,12 @@ output:
 
 Packages needed for analysis
 ```{r warning=FALSE, message=FALSE}
+##install.packages("maps")
+library(maps)
+##install.packages("ggmap")
+library(ggmap)
+##install.packages("ggthemes")
+library(ggthemes)
 ## install.packages("qualtRics")
 library(qualtRics)
 ## install.packages("tidyverse")
@@ -42,8 +48,7 @@ Df <- read_survey("A large, multi-site test of SAM.csv") %>%
   clean_names()
 
 names(Df) <- tolower(names(Df))
-Df <- Df %>% rename(responseid = response_id) %>% 
-  rename(group = fl_13_do) 
+Df <- Df %>% rename(responseid = response_id, latitude = location_latitude,longitude = location_longitude,group = fl_13_do) 
 
 ipip <- Df %>% 
   select(responseid, group, starts_with("ipip")) 
@@ -244,6 +249,23 @@ age <- Df %>%
   mutate(mean = mean(age),
         median = median(age),
         sd = sd(age))
+```
+We plot on a world map participants that took part in the experiment.
+```{r warning=FALSE, message=FALSE}
+
+world <- get_stamenmap(
+  bbox = c(left = -180, bottom = -57, right = 179, top = 82.1), 
+  maptype = "terrain",
+  zoom = 2)
+
+# Plot the points on the map
+ggmap(world) + # creates the map "background"
+  geom_point(data = Df, 
+             aes(x = longitude, y = latitude), 
+             alpha = .3, 
+             size = .1) +
+  theme_map()
+
 ```
 We have to check that on a descriptive level the level of stress in the control group is higher than in the other experimental groups.
 ```{r warning=FALSE, message=FALSE}
