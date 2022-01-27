@@ -1,4 +1,4 @@
-library(ggplot2)
+
 library(BayesFactor)
 library(dplyr)
 library(tidyverse)
@@ -215,29 +215,14 @@ sam_control <- Df %>%
 gender <- Df %>%
   select(responseid, gender,site)
 
+eng_level <- Df %>%
+  select(responseid, eng_level)
+
 age <- Df %>%
   select(responseid, age,site) %>%
   mutate(mean = mean(age),
          median = median(age),
          sd = sd(age))
-
-#We check how many participants sites are collecting
-
-DfSitesEN <- Df %>%
-  filter(site == "EN") 
-nrow(DfSites)
-
-#We print how many observations each site collected 
-print (DfSitesEN)
-
-#We repeat this for each site
-#When the full list of sites will be available you will be able to modify the script
-
-DfSitesLA <- Df %>%
-  filter(site == "LA") 
-nrow(DfSitesLA)
-
-print (DfSitesLA)
 
 
 #We have to check that on a descriptive level the level of stress in
@@ -248,10 +233,10 @@ Stai %>%
   summarise_at(vars(Stai_average), list(name = mean))
 
 #We set a minimum of 50 participants for groups to avoid risk of misleading evidences and we 
-#set 1000 as the maximum number of participants for each group
+#For now we set 600 as the maximum number of participants for each group (it will be fixed when we will have the total number of sites)
 
 n=50
-N=1000
+N=600
 
 c1=filter(Stai, group == "Condition5:Bookchapter" ) 
 if(nrow(c1) < n){
@@ -302,9 +287,9 @@ s3=ttestBF(x = control_s, y=mm,paired=F,nullInterval = c(0, Inf))
 
 s4=ttestBF(x = control_s, y=bs,paired=F,nullInterval = c(0, Inf))
 
-#We fixed the minimum sample size per group n=50 and the maximum N=1000
+#We fixed the minimum sample size per group n=50 and the maximum N=600
 #If the observations in the group are less than 50 the stress vector is not generated, 
-#if they are between 50 and 1000 then the available observations are taken
+#if they are between 50 and 600 then the available observations are taken
 
 
 #We identify the experimental groups that have a BF of 10 (in favor of H1) or a BF 

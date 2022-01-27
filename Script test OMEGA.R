@@ -92,8 +92,6 @@ mod1f <- 'ipip_scale =~ ipip1 + ipip2 + ipip3 + ipip4 + ipip5 + ipip6 + ipip7 + 
 ipip11_r + ipip12_r + ipip13_r + ipip14_r + ipip15_r + ipip16_r + ipip17_r + ipip18_r + ipip19_r + ipip20_r' 
 
 
-
-
 fit1f <- cfa(mod1f, data=open, std.lv=T, missing='direct', estimator='MLR')
 
 summary(fit1f, fit.measures=T)
