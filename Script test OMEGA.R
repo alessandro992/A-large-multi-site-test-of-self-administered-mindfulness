@@ -1,13 +1,5 @@
----
-title: "Main script"
-output:
-  html_document: default
-  pdf_document: default
----
 
-
-Packages needed for analysis
-```{r warning=FALSE, message=FALSE}
+  
 ##install.packages("maps")
 library(maps)
 ##install.packages("ggmap")
@@ -33,17 +25,31 @@ library(reshape2)
 ## install.packages("DT")
 library(DT)  
 ## install.packages("tinytex")
+
+
+#Packages from the article
+install.packages("lavaan")
+install.packages("semTools")
+install.packages("psych")
+install.packages("MBESS")
+
+library(lavaan)
+library(semTools)
+library(psych)
+library(MBESS)
+
+
 library(tinytex)
-```
+library(haven)
+library(magrittr)
+library(fastDummies)
+library(sjlabelled)
+library(GPArotation)
+library(lavaan)
+library(kableExtra)
+library(readr)
 
-Random Seed
-```{r warning=FALSE, message=FALSE}
-set.seed(10)
-```
 
-
-Creating different datasets from the csv file: ipip, stai,sam_arousal,sam_control,sam_emotional,age, gender. For each scales we computed the sum, the means, the median and SDs.
-```{r warning=FALSE, message=FALSE}
 Df <- read_survey("A large, multi-site test of SAM.csv") %>%
   clean_names()
 
@@ -76,7 +82,41 @@ ipip <- ipip %>%
             ipip18_r = 6 - ipip18,
             ipip19_r = 6 - ipip19,
             ipip20_r = 6 - ipip20,)  %>%
-mutate(ipip_tot = rowSums(select(., c(3:22))))
+  mutate(ipip_tot = rowSums(select(., c(3:22))))
+
+
+ipip_scale <- Df  %>% 
+  select(starts_with("ipip")) 
+
+mod1f <- 'ipip_scale =~ ipip1 + ipip2 + ipip3 + ipip4 + ipip5 + ipip6 + ipip7 + ipip8 + ipip9 + ipip10 +
+ipip11_r + ipip12_r + ipip13_r + ipip14_r + ipip15_r + ipip16_r + ipip17_r + ipip18_r + ipip19_r + ipip20_r' 
+
+
+
+
+fit1f <- cfa(mod1f, data=open, std.lv=T, missing='direct', estimator='MLR')
+
+summary(fit1f, fit.measures=T)
+
+
+ipip_scale_items <- c("ipip1","ipip2","ipip3","ipip3","ipip4","ipip5","ipip6","ipip7","ipip8","ipip9",
+                      "ipip10","ipip11_r","ipip12_r","ipip13_r","ipip14_r","ipip15_r","ipip16_r",
+                      "ipip17_r","ipip18_r","ipip19_r","ipip20_r")
+
+ipip_scale_items
+
+efa_ipip_scale <- fa(ipip_scale, 2, "oblimin") #here the "1" is for 1 factor
+print(efa_ipip_scale, digits = 2, cutoff = .3, sort = T)
+
+#alpha & omega
+omega_ipip <- psych::omega(ipip_scale[, ipip_scale_items ])
+#table
+ic <- data.frame(
+  scales = c("ipip"),
+  alpha = c(omega_ipip[["alpha"]]),
+  omega_hierarchical = c(omega_ipip[["omega_h"]]),
+  omega_total = c(omega_ipip[["omega.tot"]])
+)
 
 ipip$ipip_average <- rowMeans(cbind(ipip$ipip1,
                                     ipip$ipip2,
@@ -98,6 +138,7 @@ ipip$ipip_average <- rowMeans(cbind(ipip$ipip1,
                                     ipip$ipip18_r,
                                     ipip$ipip19_r,
                                     ipip$ipip20_r), na.rm = TRUE)
+
 
 ipip$ipip_median <- median(cbind(ipip$ipip1,
                                  ipip$ipip2,
@@ -247,8 +288,8 @@ gender <- Df %>%
 age <- Df %>%
   select(responseid, age) %>%
   mutate(mean = mean(age),
-        median = median(age),
-        sd = sd(age))
+         median = median(age),
+         sd = sd(age))
 ```
 We plot on a world map participants that took part in the experiment.
 ```{r warning=FALSE, message=FALSE}
@@ -282,7 +323,7 @@ If the observations in the group are less than 50 the stress vector is not gener
 ```{r warning=FALSE, message=FALSE}
 c1=filter(Stai, group == "Condition5:Bookchapter" ) 
 if(nrow(c1) > n & nrow(c1)<N){
-      control_s=c1$Stai_average
+  control_s=c1$Stai_average
 }  else if (nrow(c1) > N) {
   control_s=sample(c1$Stai_average,N)
 } else
@@ -290,7 +331,7 @@ if(nrow(c1) > n & nrow(c1)<N){
 
 c2=filter(Stai, group == "Condition4:BodyScan" )
 if(nrow(c2) > n & nrow(c2)<N){
-      bs=c2$Stai_average
+  bs=c2$Stai_average
 }  else if (nrow(c2) > N) {
   bs=sample(c2$Stai_average,N)
 } else
@@ -298,7 +339,7 @@ if(nrow(c2) > n & nrow(c2)<N){
 
 c3=filter(Stai, group == "Condition3:Loving-kindness " )
 if(nrow(c3) > n & nrow(c3)<N){
-      lk=c3$Stai_average
+  lk=c3$Stai_average
 }  else if (nrow(c3) > N) {
   lk=sample(c3$Stai_average,N)
 } else
@@ -306,7 +347,7 @@ if(nrow(c3) > n & nrow(c3)<N){
 
 c4=filter(Stai, group == "Condition2:Mindful-Movements " ) 
 if(nrow(c4) > n & nrow(c4)<N){
-      mm=c4$Stai_average
+  mm=c4$Stai_average
 }  else if (nrow(c4) > N) {
   mm=sample(c4$Stai_average,N)
 } else
@@ -314,7 +355,7 @@ if(nrow(c4) > n & nrow(c4)<N){
 
 c5=filter(Stai, group == "Condition1:Mindful-Breathing " )
 if(nrow(c5) > n & nrow(c5)<N){
-      mb=c5$Stai_average
+  mb=c5$Stai_average
 }  else if (nrow(c5) > N) {
   mb=sample(c5$Stai_average,N)
 } else
@@ -351,13 +392,13 @@ if(("Condition1:Mindful-Breathing " %in% name)==T){
              paired=F,
              nullInterval = c(0, Inf))
   t1b=ttestBF(x = filter(sam_control, group == "Condition5:Bookchapter" )$sam3_1,
-             y=filter(sam_control, group == "Condition1:Mindful-Breathing " )$sam3_1,
-             paired=F,
-             nullInterval = c(0, Inf))
+              y=filter(sam_control, group == "Condition1:Mindful-Breathing " )$sam3_1,
+              paired=F,
+              nullInterval = c(0, Inf))
   t1c=ttestBF(x = filter(sam_emotional, group == "Condition5:Bookchapter" )$sam2_1,
-             y=filter(sam_emotional, group == "Condition1:Mindful-Breathing " )$sam1_1,
-             paired=F,
-             nullInterval = c(0, Inf))
+              y=filter(sam_emotional, group == "Condition1:Mindful-Breathing " )$sam1_1,
+              paired=F,
+              nullInterval = c(0, Inf))
 }  else
   t1=t1b=t1c=NA
 
@@ -367,13 +408,13 @@ if(("Condition3:Loving-kindness " %in% name)==T){
              paired=F,
              nullInterval = c(0, Inf))
   t2b=ttestBF(x = filter(sam_control, group == "Condition5:Bookchapter" )$sam3_1,
-             y=filter(sam_control, group == "Condition3:Loving-kindness " )$sam3_1,
-             paired=F,
-             nullInterval = c(0, Inf))
+              y=filter(sam_control, group == "Condition3:Loving-kindness " )$sam3_1,
+              paired=F,
+              nullInterval = c(0, Inf))
   t2c=ttestBF(x = filter(sam_emotional, group == "Condition5:Bookchapter" )$sam2_1,
-             y=filter(sam_emotional, group == "Condition3:Loving-kindness " )$sam1_1,
-             paired=F,
-             nullInterval = c(0, Inf))
+              y=filter(sam_emotional, group == "Condition3:Loving-kindness " )$sam1_1,
+              paired=F,
+              nullInterval = c(0, Inf))
 }  else
   t2=t2b=t2c=NA
 
@@ -383,13 +424,13 @@ if(("Condition2:Mindful-Movements " %in% name)==T){
              paired=F,
              nullInterval = c(0, Inf))
   t3b=ttestBF(x = filter(sam_control, group == "Condition5:Bookchapter" )$sam3_1,
-             y=filter(sam_control, group == "Condition2:Mindful-Movements " )$sam3_1,
-             paired=F,
-             nullInterval = c(0, Inf))
+              y=filter(sam_control, group == "Condition2:Mindful-Movements " )$sam3_1,
+              paired=F,
+              nullInterval = c(0, Inf))
   t3c=ttestBF(x = filter(sam_emotional, group == "Condition5:Bookchapter" )$sam2_1,
-             y=filter(sam_emotional, group == "Condition2:Mindful-Movements " )$sam1_1,
-             paired=F,
-             nullInterval = c(0, Inf))
+              y=filter(sam_emotional, group == "Condition2:Mindful-Movements " )$sam1_1,
+              paired=F,
+              nullInterval = c(0, Inf))
 }  else
   t3=t3b=t3c=NA
 
@@ -399,13 +440,13 @@ if(("Condition4:BodyScan" %in% name)==T){
              paired=F,
              nullInterval = c(0, Inf))
   t4b=ttestBF(x = filter(sam_control, group == "Condition5:Bookchapter" )$sam3_1,
-             y=filter(sam_control, group == "Condition4:BodyScan" )$sam3_1,
-             paired=F,
-             nullInterval = c(0, Inf))
+              y=filter(sam_control, group == "Condition4:BodyScan" )$sam3_1,
+              paired=F,
+              nullInterval = c(0, Inf))
   t4c=ttestBF(x = filter(sam_emotional, group == "Condition5:Bookchapter" )$sam2_1,
-             y=filter(sam_emotional, group == "Condition4:BodyScan" )$sam1_1,
-             paired=F,
-             nullInterval = c(0, Inf))
+              y=filter(sam_emotional, group == "Condition4:BodyScan" )$sam1_1,
+              paired=F,
+              nullInterval = c(0, Inf))
 }  else
   t4=t4b=t4c=NA
 ```
@@ -428,14 +469,14 @@ results<-merge(x=Stai2,y=ipip2,by="responseid",all.x=TRUE)
 
 
 The first question we can ask ourselves is: is the interaction between neuroticism and the experimental group reasonable?
-```{r warning=FALSE, message=FALSE}
+  ```{r warning=FALSE, message=FALSE}
 model=lm(Stai_average ~ group.x + ipip_average + group.x:ipip_average, data=results)
 summary(model)
 ```
 
 At this point I build a Bayesian model with and without interaction and check whether the one with the interaction is preferable and observe the parameter estimates. I continue the data collection untill a BF of 10 is reached for the model with the interaction or until the total
 maximum sample size is reach. the total maximum sample size is 120 (maximun n requested to each site) * n (number of sites that participate in the study). If the threshold of 10 (for 
-the model with the interaction) is not reached or if the total maximum sample size is not reached data collection will be stopped 3 months after the beginning of the data collection. 
+                                                                                                                                                                                   the model with the interaction) is not reached or if the total maximum sample size is not reached data collection will be stopped 3 months after the beginning of the data collection. 
 ```{r warning=FALSE, message=FALSE}
 full <- lmBF(Stai_average ~ group.x + ipip_average + group.x:ipip_average, data=results)
 full
