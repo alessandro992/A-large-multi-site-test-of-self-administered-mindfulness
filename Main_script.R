@@ -6,6 +6,10 @@ library(readxl)
 library(readr)
 library(janitor)
 library(qualtRics)
+library(lavaan)
+library(semTools)
+library(psych)
+library(MBESS)
 
 set.seed(10)
 
@@ -303,7 +307,7 @@ groups=c("Condition1:Mindful-Breathing ",
 value=c(extractBF(s1)$bf[1],extractBF(s2)$bf[1],extractBF(s3)$bf[1],extractBF(s4)$bf[1],11)
 Size=c(length(mb),length(lk),length(mm),length(bs),length(control_s))
 data=data.frame(groups,value,Size)
-name=data[data$value>10 | data$value < 0.10 | Size>=N_max  ,"groups"]
+name=data[data$value>10 | data$value < 0.10 | Size>=N  ,"groups"]
 
 #If a group exceeds BF=10 in stress, we compute the BF test also for sam_arousal, sam_control,
 #sam_emotional as well, otherwise we obtain NA. Being this an exploratory analysis we do not commit
