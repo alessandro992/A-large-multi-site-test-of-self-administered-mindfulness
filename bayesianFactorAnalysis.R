@@ -1,6 +1,6 @@
 #Bayesian design analysis settings
 
-nLabsExpected <- 42 # The number of labs that committed to data collection
+nLabsExpected <- 30 # Hedged number of labs. The number of labs that committed to data collection was 41
 labMinN <- 70 # Minimum required N per lab
 labMaxN <- 130 # Stopping N for labs
 nConditions <- 5 # Number of experimental conditions
