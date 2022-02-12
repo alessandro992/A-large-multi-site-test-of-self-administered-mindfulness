@@ -12,7 +12,7 @@
 
 #'# Simulation settings
 # Number of simulations
-nSim <- 70
+nSim <- 10000
 # Bayes factor boundary
 bfBoundary <- 10
 
@@ -28,7 +28,7 @@ nLabsExpected <- 30 # The number of labs that committed to data collection was 4
 # Minimum required N per lab
 labMinN <- 70
 # Stopping N for labs
-labMaxN <- 130 
+labMaxN <- 120 
 # Number of experimental conditions
 nConditions <- 5
 # Distribution of plausible, yet conservatively small effect sizes
