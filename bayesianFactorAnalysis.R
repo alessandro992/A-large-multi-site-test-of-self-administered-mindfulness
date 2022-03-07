@@ -12,7 +12,7 @@
 
 #'# Simulation settings
 # Number of simulations
-nSim <- 10000
+nSim <- 50
 # Bayes factor boundary
 bfBoundary <- 10
 
@@ -32,7 +32,7 @@ labMaxN <- 120
 # Number of experimental conditions
 nConditions <- 5
 # Distribution of plausible, yet conservatively small effect sizes
-effectSize <- rnorm(1e6, .2, .05) # Centered at .2 with 95% CI between .1 and .3
+effectSize <- rnorm(1e6, 0, 0) # Centered at .2 with 95% CI between .1 and .3
 
 #+ setup, include = FALSE
 knitr::opts_chunk$set(echo=FALSE, warning = FALSE)
