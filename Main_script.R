@@ -1,4 +1,3 @@
-
 library(BayesFactor)
 library(dplyr)
 library(tidyverse)
@@ -13,7 +12,7 @@ library(MBESS)
 
 set.seed(10)
 
-Df <- read_survey("test.csv") %>%
+Df <- read_survey("test3.csv") %>%
   clean_names()
 
 names(Df) <- tolower(names(Df))
@@ -256,14 +255,14 @@ if(nrow(c2) < n){
   bs=c2$Stai_average
 } 
 
-c3=filter(Stai, group == "Condition3:Loving-kindness " )
+c3=filter(Stai, group == "Condition3:Loving-kindness" )
 if(nrow(c3) < n){
   lk=NA
 }  else if (nrow(c3) >= n) {
   lk=c3$Stai_average
 } 
 
-c4=filter(Stai, group == "Condition2:Mindful-Movements " ) 
+c4=filter(Stai, group == "Condition1:Mindfulwalking" ) 
 if(nrow(c4) < n){
   mm=c4$Stai_average
 }  else if (nrow(c4) > N) {
@@ -271,7 +270,7 @@ if(nrow(c4) < n){
 } else
   mm=NA
 
-c5=filter(Stai, group == "Condition1:Mindful-Breathing " )
+c5=filter(Stai, group == "Condition2:Mindfulbreathing" )
 if(nrow(c5) > n & nrow(c5)<N){
   mb=c5$Stai_average
 }  else if (nrow(c5) > N) {
@@ -280,16 +279,16 @@ if(nrow(c5) > n & nrow(c5)<N){
   mb=NA
 
 #Where sample size is sufficiently big we carry out the 4 BF test. If a group has not exceeded size 50 
-#we get an error message. The alternative hypothesis is that the mean of the control in terms of stress
-#is higher than that of the experimental group (one-side test).
+#we get an error message. 
 
-s1=ttestBF(x = control_s, y=mb,paired=F,nullInterval = c(0, Inf))
+s1=ttestBF(x = control_s, y=mb,paired=F)
 
-s2=ttestBF(x = control_s, y=lk,paired=F,nullInterval = c(0, Inf))
+s2=ttestBF(x = control_s, y=lk,paired=F)
 
-s3=ttestBF(x = control_s, y=mm,paired=F,nullInterval = c(0, Inf))
+s3=ttestBF(x = control_s, y=mm,paired=F)
 
-s4=ttestBF(x = control_s, y=bs,paired=F,nullInterval = c(0, Inf))
+s4=ttestBF(x = control_s, y=bs,paired=F)
+
 
 #We fixed the minimum sample size per group n=50 and the maximum N=600
 #If the observations in the group are less than 50 the stress vector is not generated, 
@@ -299,9 +298,9 @@ s4=ttestBF(x = control_s, y=bs,paired=F,nullInterval = c(0, Inf))
 #We identify the experimental groups that have a BF of 10 (in favor of H1) or a BF 
 #of 0.1 (in Favor of H0)
 
-groups=c("Condition1:Mindful-Breathing ",
-         "Condition3:Loving-kindness ",
-         "Condition2:Mindful-Movements ",
+groups=c("Condition2:Mindfulbreathing",
+         "Condition3:Loving-kindness",
+         "Condition1:Mindfulwalking",
          "Condition4:BodyScan",
          "Condition5:Bookchapter")
 value=c(extractBF(s1)$bf[1],extractBF(s2)$bf[1],extractBF(s3)$bf[1],extractBF(s4)$bf[1],11)
@@ -315,65 +314,53 @@ name=data[data$value>10 | data$value < 0.10 | Size>=N  ,"groups"]
 
 if(("Condition1:Mindful-Breathing " %in% name)==T){
   t1=ttestBF(x = filter(sam_arousal, group == "Condition5:Bookchapter" )$sam2_1,
-             y=filter(sam_arousal, group == "Condition1:Mindful-Breathing " )$sam2_1,
-             paired=F,
-             nullInterval = c(0, Inf))
+             y=filter(sam_arousal, group == "Condition2:Mindfulbreathing" )$sam2_1,
+             paired=F)
   t1b=ttestBF(x = filter(sam_control, group == "Condition5:Bookchapter" )$sam3_1,
-              y=filter(sam_control, group == "Condition1:Mindful-Breathing " )$sam3_1,
-              paired=F,
-              nullInterval = c(0, Inf))
+              y=filter(sam_control, group == "Condition2:Mindfulbreathing" )$sam3_1,
+              paired=F)
   t1c=ttestBF(x = filter(sam_emotional, group == "Condition5:Bookchapter" )$sam2_1,
-              y=filter(sam_emotional, group == "Condition1:Mindful-Breathing " )$sam1_1,
-              paired=F,
-              nullInterval = c(0, Inf))
+              y=filter(sam_emotional, group == "Condition2:Mindfulbreathing" )$sam1_1,
+              paired=F)
 }  else
   t1=t1b=t1c=NA
 
 if(("Condition3:Loving-kindness " %in% name)==T){
   t2=ttestBF(x = filter(sam_arousal, group == "Condition5:Bookchapter" )$sam2_1,
-             y=filter(sam_arousal, group == "Condition3:Loving-kindness " )$sam2_1,
-             paired=F,
-             nullInterval = c(0, Inf))
+             y=filter(sam_arousal, group == "Condition3:Loving-kindness" )$sam2_1,
+             paired=F)
   t2b=ttestBF(x = filter(sam_control, group == "Condition5:Bookchapter" )$sam3_1,
-              y=filter(sam_control, group == "Condition3:Loving-kindness " )$sam3_1,
-              paired=F,
-              nullInterval = c(0, Inf))
+              y=filter(sam_control, group == "Condition3:Loving-kindness" )$sam3_1,
+              paired=F)
   t2c=ttestBF(x = filter(sam_emotional, group == "Condition5:Bookchapter" )$sam2_1,
-              y=filter(sam_emotional, group == "Condition3:Loving-kindness " )$sam1_1,
-              paired=F,
-              nullInterval = c(0, Inf))
+              y=filter(sam_emotional, group == "Condition3:Loving-kindness" )$sam1_1,
+              paired=F)
 }  else
   t2=t2b=t2c=NA
 
 if(("Condition2:Mindful-Movements " %in% name)==T){
-  t3=ttestBF(x = filter(sam_arousal, group == "Condition5:Bookchapter" )$sam2_1,
-             y=filter(sam_arousal, group == "Condition2:Mindful-Movements " )$sam2_1,
-             paired=F,
-             nullInterval = c(0, Inf))
-  t3b=ttestBF(x = filter(sam_control, group == "Condition5:Bookchapter" )$sam3_1,
-              y=filter(sam_control, group == "Condition2:Mindful-Movements " )$sam3_1,
-              paired=F,
-              nullInterval = c(0, Inf))
-  t3c=ttestBF(x = filter(sam_emotional, group == "Condition5:Bookchapter" )$sam2_1,
-              y=filter(sam_emotional, group == "Condition2:Mindful-Movements " )$sam1_1,
-              paired=F,
-              nullInterval = c(0, Inf))
+  t3=ttestBF(x = filter(sam_arousal, group == "Condition5:Bookchapter")$sam2_1,
+             y=filter(sam_arousal, group == "Condition1:Mindfulwalking")$sam2_1,
+             paired=F)
+  t3b=ttestBF(x = filter(sam_control, group == "Condition5:Bookchapter")$sam3_1,
+              y=filter(sam_control, group == "Condition1:Mindfulwalking")$sam3_1,
+              paired=F)
+  t3c=ttestBF(x = filter(sam_emotional, group == "Condition5:Bookchapter")$sam2_1,
+              y=filter(sam_emotional, group == "Condition1:Mindfulwalking")$sam1_1,
+              paired=F)
 }  else
   t3=t3b=t3c=NA
 
 if(("Condition4:BodyScan" %in% name)==T){
-  t4=ttestBF(x = filter(sam_arousal, group == "Condition5:Bookchapter" )$sam2_1,
-             y=filter(sam_arousal, group == "Condition4:BodyScan" )$sam2_1,
-             paired=F,
-             nullInterval = c(0, Inf))
-  t4b=ttestBF(x = filter(sam_control, group == "Condition5:Bookchapter" )$sam3_1,
-              y=filter(sam_control, group == "Condition4:BodyScan" )$sam3_1,
-              paired=F,
-              nullInterval = c(0, Inf))
-  t4c=ttestBF(x = filter(sam_emotional, group == "Condition5:Bookchapter" )$sam2_1,
-              y=filter(sam_emotional, group == "Condition4:BodyScan" )$sam1_1,
-              paired=F,
-              nullInterval = c(0, Inf))
+  t4=ttestBF(x = filter(sam_arousal, group == "Condition5:Bookchapter")$sam2_1,
+             y=filter(sam_arousal, group == "Condition4:BodyScan")$sam2_1,
+             paired=F)
+  t4b=ttestBF(x = filter(sam_control, group == "Condition5:Bookchapter")$sam3_1,
+              y=filter(sam_control, group == "Condition4:BodyScan")$sam3_1,
+              paired=F)
+  t4c=ttestBF(x = filter(sam_emotional, group == "Condition5:Bookchapter")$sam2_1,
+              y=filter(sam_emotional, group == "Condition4:BodyScan")$sam1_1,
+              paired=F)
 }  else
   t4=t4b=t4c=NA
 
