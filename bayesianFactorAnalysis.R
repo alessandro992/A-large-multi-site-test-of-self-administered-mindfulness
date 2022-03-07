@@ -39,7 +39,7 @@ knitr::opts_chunk$set(echo=FALSE, warning = FALSE)
 # Libraries
 library(BFDA)
 library(parallel)
-# readRDS("simResults.RDS")
+# simResults <- readRDS("simResults.RDS")
 
 minN <- (nLabsExpected*labMinN/nConditions)
 maxN <- (nLabsExpected*labMaxN/nConditions)
@@ -64,17 +64,17 @@ simResults <- list(
 
 #+ include = TRUE
 #'## H1 results
-simH1
+simResults$simObjectH1
 simResults$resultsH1
 #'### Sequential design analysis plot for H1
-plot(simH1, boundary=c(1/10, 10))
+plot(simResults$simObjectH1, boundary=c(1/10, 10))
 plotH1 <- recordPlot()
 
 #'## H0 results
-simH0
+simResults$simObjectH0
 simResults$resultsH0
 #'### Sequential design analysis plot for H0
-plot(simH0, boundary=c(1/10, 10))
+plot(simResults$simObjectH0, boundary=c(1/10, 10))
 plotH0 <- recordPlot()
 
 saveRDS(simResults, "simResults.RDS")
