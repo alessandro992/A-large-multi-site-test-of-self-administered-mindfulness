@@ -40,7 +40,7 @@ Df <- Df[!(is.na(Df$responseid)==T),]
 # remove rows if group is missing
 Df <- Df[!(is.na(Df$group)==T),]
 # remove rows if duration <946
-Df <- Df[Df$`duration (in seconds)`> 946,]
+Df <- Df[Df$duration_in_seconds > 1,]
 # remove duplicates in response id
 Df[!duplicated(Df$responseid),]
 # remove variables of scales if missing > 50%
