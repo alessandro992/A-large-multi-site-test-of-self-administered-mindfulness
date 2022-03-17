@@ -1,3 +1,11 @@
+---
+title: "Untitled"
+author: ""
+date: "17/3/2022"
+output: html_document
+---
+
+```{r warning=F, message=F, echo=F, results=F}
 #Required Libraries
 
 library(BayesFactor)
@@ -537,16 +545,19 @@ full/noInteraction
 
 chainsFull <- posterior(full, iterations = 10000)
 summary(chainsFull[,1:7])
+```
 
 
-# participants for each groups
+
+```{r warning=F, message=F, echo=F}
+d=as.data.frame(table(Df$site))
+colnames(d)=c("Site","Subjects")
+d
 
 d=as.data.frame(table(Df$group))
 colnames(d)=c("Group","Subjects")
 d
 
-# participants for each site
+data
+```
 
-d=as.data.frame(table(Df$site))
-colnames(d)=c("Site","Subjects")
-d
