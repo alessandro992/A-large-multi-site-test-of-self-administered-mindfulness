@@ -1,4 +1,4 @@
-#Required Libraries
+# Required Libraries
 
 library(BayesFactor)
 library(dplyr)
@@ -15,8 +15,8 @@ library(tm)
 
 set.seed(10)
 
-# Load raw csv file
-Df <- read_survey("test4.csv") %>%
+# Load raw csv file - call the dataset sam_multisite.csv to make the script work
+Df <- read_survey("sam_multisite.csv") %>%
   clean_names()
 
 # Adjust variables name
@@ -26,9 +26,6 @@ Df <- Df %>% rename(responseid = response_id,
                     group = fl_13_do,
                     story=fl_123_do) 
 
-
-# Fake site variable
-Df$site=c(rep("ita",200),rep("usa",300),rep("australia",80),rep(NA,20))
 Df$site=as.character(Df$site)
 Df$site=tolower(Df$site)
 Df$site=trimws(Df$site, whitespace = "[\\h\\v\\t ]")
@@ -48,7 +45,7 @@ Df <- Df[Df$age != "999",]
 Df <- Df[Df$age != 999,]
 
 # remove rows with DURATION <946
-Df <- Df[Df$duration_in_seconds > 0,]
+Df <- Df[Df$duration_in_seconds > 946,]
 
 # remove duplicates in RESPONSEID
 Df[!duplicated(Df$responseid),]
@@ -61,7 +58,7 @@ check=Df2$check
 Df=cbind(Df,check)
 Df=Df[Df$check < 0.5,]
 
-# remove individuals with 10 equal response in ipip or stai items
+# remove individuals with 10 or more consecutive equal responses in ipip or stai items
 Dd=Df %>% 
   select(starts_with("ipip"))
 De=Df %>% 
@@ -105,9 +102,9 @@ Df$site=as.factor(Df$site)
 Df$story=as.factor(Df$story)
 
 
-#Creating different datasets from the csv file: ipip, stai,sam_arousal,
-#sam_control,sam_emotional,age,gender. For each scales we computed the sum, 
-#the means, the median and SDs.
+# Creating different datasets from the csv file: ipip, stai,sam_arousal,
+# sam_control,sam_emotional,age,gender. For each scales we computed the sum, 
+# the means, the median and SDs.
 
 ipip <- Df %>% 
   select(responseid, group, starts_with("ipip"),site,story) 
@@ -325,7 +322,7 @@ Stai %>%
   summarise_at(vars(Stai_average), list(name = mean))
 
 
-#Selecting scores STAI for each group if n > 100 otherwise it will be a Nas
+# selecting scores STAI for each group if n > 100 otherwise it will be a Nas
 n=100
 
 c5=filter(Stai, group == "condition5bookchapter" ) 
@@ -374,7 +371,7 @@ if(nrow(c2)<n){
 } 
 
 
-#lmBF for each experimental condition and the control group with sites and story as random factor for STAI
+# computing the lmBF function for each experimental condition and the control group with sites and story as random factor for STAI
 data1=data.frame(Stress=c(control_s,mw),
                  Group=c(rep("Control",length(control_s)),rep("MW",length(mw))),
                  Site=c(control_site,mw_site),
@@ -414,7 +411,7 @@ data4$Site=as.factor(data4$Site)
 data4$Story=as.factor(data4$Story)
 s4=lmBF(Stress ~ Site + Story + Group ,data4,whichRandom=c("site","story"))
 
-# Verify groups with (BF > 10 or BF < 0.1 or N > Nmax) 
+# verify groups with (BF > 10 or BF < 0.1 or N > Nmax) 
 N_max=4800
 groups=c("condition1mindfulwalking","condition2mindfulbreathing",
          "condition3lovingkindness","condition4bodyscan",
@@ -424,7 +421,7 @@ Size=c(length(mw),length(mb),length(lk),length(bs),length(control_s))
 data=data.frame(groups,value,Size)
 name=data[data$value>10 | data$value < 0.10 | Size>=N_max  ,"groups"]
 
-#lmBF for each experimental condition and the control group with sites and story as random factor for SAM
+# computing the lmBF function for each experimental condition and the control group with sites and story as random factor for SAM
 if(("condition1mindfulwalking" %in% name)==T){
   
   D1=sam_emotional[sam_emotional$group == "condition5bookchapter" | sam_emotional$group == "condition1mindfulwalking",]
@@ -500,9 +497,9 @@ Sam_emotional_BF=c(extractBF(t1)$bf[1],extractBF(t2)$bf[1],
 data=data.frame(Comparison,Stress_BF,Sam_arousal_BF,Sam_control_BF,Sam_emotional_BF)
 data
 
-#creating a  dataset with stai_avg e ipip_avg group, site, story
-#left join with stai_avergae e ipip_average keeping the 4 extra variables (results)
-#testing the moderation of neuroticism
+# creating a  dataset with stai_avg e ipip_avg group, site, story
+# left join with stai_avergae e ipip_average keeping the 4 extra variables (results)
+# testing the moderation of neuroticism
 
 results<-merge(x=Stai,y=ipip,by="responseid",all.x=TRUE)
 results=results[,c(1,2,3,4,26,53)]
@@ -530,12 +527,13 @@ chainsFull <- posterior(full, iterations = 10000)
 summary(chainsFull[,1:7])
 
 
-#check how many participants for each groups
+# data collection tracker
+# check how many participants for each groups
 d=as.data.frame(table(Df$group))
 colnames(d)=c("Group","Subjects")
 d
 
-#check how many participants for site
+# check how many participants for site
 d=as.data.frame(table(Df$site))
 colnames(d)=c("Site","Subjects")
 d
