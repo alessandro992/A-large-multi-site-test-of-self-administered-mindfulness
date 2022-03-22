@@ -27,7 +27,7 @@ Df <- Df %>% rename(responseid = response_id,
                     story=fl_123_do) 
 
 
-# Fake site variable
+# Fake site variable - remove this row when data collection starts
 Df$site=c(rep("Italy",200),rep("USA",300),rep("Australia",100))
 
 # remove rows with missing RESPONSEID 
@@ -36,8 +36,8 @@ Df <- Df[!(is.na(Df$responseid)==T),]
 # remove rows with missing GROUP
 Df <- Df[!(is.na(Df$group)==T),]
 
-# remove rows with DURATION <946
-Df <- Df[Df$duration_in_seconds > 0,]
+# remove rows with DURATION <946 - remove the comment in the actual study
+#Df <- Df[Df$duration_in_seconds > 946,]
 
 # remove duplicates in RESPONSEID
 Df[!duplicated(Df$responseid),]
@@ -316,7 +316,7 @@ Stai %>%
 
 
 #Selecting scores STAI for each group if n > 100 otherwise it will be a Nas
-#n1 for testing purposes - it should be 100
+
 
 n=100
 
