@@ -27,8 +27,15 @@ Df <- Df %>% rename(responseid = response_id,
                     story=fl_123_do) 
 
 
-# Fake site variable - remove this row when data collection starts
-Df$site=c(rep("Italy",200),rep("USA",300),rep("Australia",100))
+# Fake site variable
+Df$site=c(rep("ita",200),rep("usa",300),rep("australia",80),rep(NA,20))
+Df$site=as.character(Df$site)
+Df$site=tolower(Df$site)
+Df$site=trimws(Df$site, whitespace = "[\\h\\v\\t ]")
+Df$site=trimws(Df$site)
+Df$site=gsub(" ","",Df$site)
+Df$site=removePunctuation(Df$site)
+
 
 # remove rows with missing RESPONSEID 
 Df <- Df[!(is.na(Df$responseid)==T),]
@@ -36,8 +43,12 @@ Df <- Df[!(is.na(Df$responseid)==T),]
 # remove rows with missing GROUP
 Df <- Df[!(is.na(Df$group)==T),]
 
-# remove rows with DURATION <946 - remove the comment in the actual study
-#Df <- Df[Df$duration_in_seconds > 946,]
+# remove rows with AGE=999
+Df <- Df[Df$age != "999",]
+Df <- Df[Df$age != 999,]
+
+# remove rows with DURATION <946
+Df <- Df[Df$duration_in_seconds > 0,]
 
 # remove duplicates in RESPONSEID
 Df[!duplicated(Df$responseid),]
@@ -90,8 +101,7 @@ Df$story[is.na(Df$story)]="absent"
 # where site is NA becomes "absent"
 Df$site[is.na(Df$site)]="absent"
 
-# group and story are factor variables
-Df$group=as.factor(Df$group)
+Df$site=as.factor(Df$site)
 Df$story=as.factor(Df$story)
 
 
@@ -316,8 +326,6 @@ Stai %>%
 
 
 #Selecting scores STAI for each group if n > 100 otherwise it will be a Nas
-
-
 n=100
 
 c5=filter(Stai, group == "condition5bookchapter" ) 
@@ -367,43 +375,47 @@ if(nrow(c2)<n){
 
 
 #lmBF for each experimental condition and the control group with sites and story as random factor for STAI
-
 data1=data.frame(Stress=c(control_s,mw),
                  Group=c(rep("Control",length(control_s)),rep("MW",length(mw))),
                  Site=c(control_site,mw_site),
                  Story=c(control_story,mw_story))
+colnames(data1)=c("Stress","Group","Site","Story")
 data1$Group=as.factor(data1$Group)
 data1$Site=as.factor(data1$Site)
 data1$Story=as.factor(data1$Story)
-s1=lmBF(Stress~Site+Story+Group,data1,
-        whichRandom=c(rawToChar(as.raw(strtoi("Site", 16L))),rawToChar(as.raw(strtoi("Story", 16L)))))
-
-data2=data.frame(H=c(control_s,mb),
-                 V=c(rep("Control",length(control_s)),rep("MB",length(mb))),
-                 site=c(control_site,mb_site),
-                 story=c(control_story,mb_story))
-s2=lmBF(H~V+site+story,data2,
-        whichRandom=c(rawToChar(as.raw(strtoi("site", 16L))),rawToChar(as.raw(strtoi("story", 16L)))))
-
-data3=data.frame(H=c(control_s,lk),
-                 V=c(rep("Control",length(control_s)),rep("LK",length(lk))),
-                 site=c(control_site,lk_site),
-                 story=c(control_story,lk_story))
-s3=lmBF(H~V+site+story,data3,
-        whichRandom=c(rawToChar(as.raw(strtoi("site", 16L))),rawToChar(as.raw(strtoi("story", 16L)))))
+s1=lmBF(Stress ~ Site + Story + Group ,data1,whichRandom=c("Site","Story"))
 
 
-data4=data.frame(H=c(control_s,bs),
-                 V=c(rep("Control",length(control_s)),rep("BS",length(bs))),
-                 site=c(control_site,bs_site),
-                 story=c(control_story,bs_story))
-s4=lmBF(H~V+site+story,data4,
-        whichRandom=c(rawToChar(as.raw(strtoi("site", 16L))),rawToChar(as.raw(strtoi("story", 16L)))))
+data2=data.frame(Stress=c(control_s,mb),
+                 Group=c(rep("Control",length(control_s)),rep("MB",length(mb))),
+                 Site=c(control_site,mb_site),
+                 Story=c(control_story,mb_story))
+data2$Group=as.factor(data2$Group)
+data2$Site=as.factor(data2$Site)
+data2$Story=as.factor(data2$Story)
+s2=lmBF(Stress ~ Site + Story + Group ,data2,whichRandom=c("site","story"))
 
+data3=data.frame(Stress=c(control_s,lk),
+                 Group=c(rep("Control",length(control_s)),rep("LK",length(lk))),
+                 Site=c(control_site,mb_site),
+                 Story=c(control_story,mb_story))
+data3$Group=as.factor(data3$Group)
+data3$Site=as.factor(data3$Site)
+data3$Story=as.factor(data3$Story)
+s3=lmBF(Stress ~ Site + Story + Group ,data3,whichRandom=c("site","story"))
+
+
+data4=data.frame(Stress=c(control_s,bs),
+                 Group=c(rep("Control",length(control_s)),rep("BS",length(bs))),
+                 Site=c(control_site,mb_site),
+                 Story=c(control_story,mb_story))
+data4$Group=as.factor(data4$Group)
+data4$Site=as.factor(data4$Site)
+data4$Story=as.factor(data4$Story)
+s4=lmBF(Stress ~ Site + Story + Group ,data4,whichRandom=c("site","story"))
 
 # Verify groups with (BF > 10 or BF < 0.1 or N > Nmax) 
-
-N_max=1000
+N_max=4800
 groups=c("condition1mindfulwalking","condition2mindfulbreathing",
          "condition3lovingkindness","condition4bodyscan",
          "condition5bookchapter")
@@ -413,20 +425,18 @@ data=data.frame(groups,value,Size)
 name=data[data$value>10 | data$value < 0.10 | Size>=N_max  ,"groups"]
 
 #lmBF for each experimental condition and the control group with sites and story as random factor for SAM
-
 if(("condition1mindfulwalking" %in% name)==T){
   
   D1=sam_emotional[sam_emotional$group == "condition5bookchapter" | sam_emotional$group == "condition1mindfulwalking",]
-  t1=lmBF(sam1 ~ group +site+story,D1,
-          whichRandom=c(rawToChar(as.raw(strtoi("site", 16L))),rawToChar(as.raw(strtoi("story", 16L)))))
+  t1=lmBF(sam1 ~ group +site+story,D1,whichRandom=c("site","story"))
+          
   
   D2=sam_arousal[sam_arousal$group == "condition5bookchapter" | sam_arousal$group == "condition1mindfulwalking",]
-  t1b=lmBF(sam2 ~ group +site+story,D2,
-           whichRandom=c(rawToChar(as.raw(strtoi("site", 16L))),rawToChar(as.raw(strtoi("story", 16L)))))
+  t1b=lmBF(sam2 ~ group +site+story,D2,whichRandom=c("site","story"))
+           
   
   D3=sam_control[sam_control$group == "condition5bookchapter" | sam_control$group == "condition1mindfulwalking",]
-  t1c=lmBF(sam3 ~ group +site+story,D3,
-           whichRandom=c(rawToChar(as.raw(strtoi("site", 16L))),rawToChar(as.raw(strtoi("story", 16L)))))
+  t1c=lmBF(sam3 ~ group +site+story,D3,whichRandom=c("site","story"))
   
 }  else
   t1=t1b=t1c=NA
@@ -434,16 +444,13 @@ if(("condition1mindfulwalking" %in% name)==T){
 if(("condition2mindfulbreathing" %in% name)==T){
   
   D1=sam_emotional[sam_emotional$group == "condition5bookchapter" | sam_emotional$group == "condition2mindfulbreathing",]
-  t2=lmBF(sam1 ~ group +site+story,D1,
-          whichRandom=c(rawToChar(as.raw(strtoi("site", 16L))),rawToChar(as.raw(strtoi("story", 16L)))))
+  t2=lmBF(sam1 ~ group +site+story,D1,whichRandom=c("site","story"))
   
   D2=sam_arousal[sam_arousal$group == "condition5bookchapter" | sam_arousal$group == "condition2mindfulbreathing",]
-  t2b=lmBF(sam2 ~ group +site+story,D2,
-           whichRandom=c(rawToChar(as.raw(strtoi("site", 16L))),rawToChar(as.raw(strtoi("story", 16L)))))
+  t2b=lmBF(sam2 ~ group +site+story,D2,whichRandom=c("site","story"))
   
   D3=sam_control[sam_control$group == "condition5bookchapter" | sam_control$group == "condition2mindfulbreathing",]
-  t2c=lmBF(sam3 ~ group +site+story,D3,
-           whichRandom=c(rawToChar(as.raw(strtoi("site", 16L))),rawToChar(as.raw(strtoi("story", 16L)))))
+  t2c=lmBF(sam3 ~ group +site+story,D3,whichRandom=c("site","story"))
   
   
 }  else
@@ -452,16 +459,13 @@ if(("condition2mindfulbreathing" %in% name)==T){
 if(("condition3lovingkindness" %in% name)==T){
   
   D1=sam_emotional[sam_emotional$group == "condition5bookchapter" | sam_emotional$group == "condition3lovingkindness",]
-  t3=lmBF(sam1 ~ group +site+story,D1,
-          whichRandom=c(rawToChar(as.raw(strtoi("site", 16L))),rawToChar(as.raw(strtoi("story", 16L)))))
+  t3=lmBF(sam1 ~ group +site+story,D1,whichRandom=c("site","story"))
   
   D2=sam_arousal[sam_arousal$group == "condition5bookchapter" | sam_arousal$group == "condition3lovingkindness",]
-  t3b=lmBF(sam2 ~ group +site+story,D2,
-           whichRandom=c(rawToChar(as.raw(strtoi("site", 16L))),rawToChar(as.raw(strtoi("story", 16L)))))
+  t3b=lmBF(sam2 ~ group +site+story,D2,whichRandom=c("site","story"))
   
   D3=sam_control[sam_control$group == "condition5bookchapter" | sam_control$group == "condition3lovingkindness",]
-  t3c=lmBF(sam3 ~ group +site+story,D3,
-           whichRandom=c(rawToChar(as.raw(strtoi("site", 16L))),rawToChar(as.raw(strtoi("story", 16L)))))
+  t3c=lmBF(sam3 ~ group +site+story,D3,whichRandom=c("site","story"))
   
 }  else
   t3=t3b=t3c=NA
@@ -469,22 +473,18 @@ if(("condition3lovingkindness" %in% name)==T){
 if(("condition4bodyscan" %in% name)==T){
   
   D1=sam_emotional[sam_emotional$group == "condition5bookchapter" | sam_emotional$group == "condition4bodyscan",]
-  t4=lmBF(sam1 ~ group +site+story,D1,
-          whichRandom=c(rawToChar(as.raw(strtoi("site", 16L))),rawToChar(as.raw(strtoi("story", 16L)))))
+  t4=lmBF(sam1 ~ group +site+story,D1,whichRandom=c("site","story"))
   
   D2=sam_arousal[sam_arousal$group == "condition5bookchapter" | sam_arousal$group == "condition4bodyscan",]
-  t4b=lmBF(sam2 ~ group +site+story,D2,
-           whichRandom=c(rawToChar(as.raw(strtoi("site", 16L))),rawToChar(as.raw(strtoi("story", 16L)))))
+  t4b=lmBF(sam2 ~ group +site+story,D2,whichRandom=c("site","story"))
   
   D3=sam_control[sam_control$group == "condition5bookchapter" | sam_control$group == "condition4bodyscan",]
-  t4c=lmBF(sam3 ~ group +site+story,D3,
-           whichRandom=c(rawToChar(as.raw(strtoi("site", 16L))),rawToChar(as.raw(strtoi("story", 16L)))))
+  t4c=lmBF(sam3 ~ group +site+story,D3,whichRandom=c("site","story"))
   
 }  else
   t4=t4b=t4c=NA
 
 # BF of STAI & SAM dimensions for the 4 conditions test
-
 Comparison=c("Control vs  Mindful Walking",
              "Control vs  Mindful Breathing",
              "Control vs  loving Kindness",
@@ -500,18 +500,9 @@ Sam_emotional_BF=c(extractBF(t1)$bf[1],extractBF(t2)$bf[1],
 data=data.frame(Comparison,Stress_BF,Sam_arousal_BF,Sam_control_BF,Sam_emotional_BF)
 data
 
-#At this point I build a Bayesian model with and without interaction and check whether the one with 
-#the interaction is preferable and observe the parameter estimates. I continue the data collection untill a BF of 10
-#is reached for the model with the interaction or until the total maximum sample size is reach. 
-#the total maximum sample size is 130 (maximun n requested to each site) * n (number of sites that participate in the study). 
-#If the threshold of 10 (for the model with the interaction) is not reached or if the total maximum sample size is not reached 
-#data collection will be stopped 3 months after the beginning of the data collection.
-#the model with the interaction) is not reached or if the total maximum sample size is not reached data 
-#collection will be stopped 3 months after the beginning of the data collection. 
-
-
-# Un dataset con stai_avg e ipip_avg group, site, story
-#left join tra stai_avergae e ipip_average mantenendo le 4 variabili extra (results)
+#creating a  dataset with stai_avg e ipip_avg group, site, story
+#left join with stai_avergae e ipip_average keeping the 4 extra variables (results)
+#testing the moderation of neuroticism
 
 results<-merge(x=Stai,y=ipip,by="responseid",all.x=TRUE)
 results=results[,c(1,2,3,4,26,53)]
@@ -521,13 +512,13 @@ full <- lmBF(Stai_average ~ group +
                ipip_average +
                group:ipip_average +
                site,
-             whichRandom=c(rawToChar(as.raw(strtoi("site", 16L))),rawToChar(as.raw(strtoi("story", 16L)))),
+             whichRandom=c("site","story"),
              data=results)
 
 noInteraction <- lmBF(Stai_average ~ group +
                         ipip_average +
                         site,
-                      whichRandom=c(rawToChar(as.raw(strtoi("site", 16L))),rawToChar(as.raw(strtoi("story", 16L)))),
+                      whichRandom=c("site","story"),
                       data=results)
 
 allBFs <- c(full, noInteraction)
@@ -539,14 +530,12 @@ chainsFull <- posterior(full, iterations = 10000)
 summary(chainsFull[,1:7])
 
 
-# participants for each groups
-
+#check how many participants for each groups
 d=as.data.frame(table(Df$group))
 colnames(d)=c("Group","Subjects")
 d
 
-# participants for each site
-
+#check how many participants for site
 d=as.data.frame(table(Df$site))
 colnames(d)=c("Site","Subjects")
 d
