@@ -380,7 +380,7 @@ colnames(data1)=c("Stress","Group","Site","Story")
 data1$Group=as.factor(data1$Group)
 data1$Site=as.factor(data1$Site)
 data1$Story=as.factor(data1$Story)
-s1=lmBF(Stress ~ Site + Story + Group ,data1,whichRandom=c("Site","Story"))
+s1=lmBF(Stress ~ Group + Site + Story ,data1,whichRandom=c("Site","Story"))
 
 
 data2=data.frame(Stress=c(control_s,mb),
@@ -390,7 +390,7 @@ data2=data.frame(Stress=c(control_s,mb),
 data2$Group=as.factor(data2$Group)
 data2$Site=as.factor(data2$Site)
 data2$Story=as.factor(data2$Story)
-s2=lmBF(Stress ~ Site + Story + Group ,data2,whichRandom=c("site","story"))
+s2=lmBF(Stress ~ Group + Site + Story ,data2,whichRandom=c("site","story"))
 
 data3=data.frame(Stress=c(control_s,lk),
                  Group=c(rep("Control",length(control_s)),rep("LK",length(lk))),
@@ -399,7 +399,7 @@ data3=data.frame(Stress=c(control_s,lk),
 data3$Group=as.factor(data3$Group)
 data3$Site=as.factor(data3$Site)
 data3$Story=as.factor(data3$Story)
-s3=lmBF(Stress ~ Site + Story + Group ,data3,whichRandom=c("site","story"))
+s3=lmBF(Stress ~ Group + Site + Story ,data3,whichRandom=c("site","story"))
 
 
 data4=data.frame(Stress=c(control_s,bs),
@@ -409,7 +409,7 @@ data4=data.frame(Stress=c(control_s,bs),
 data4$Group=as.factor(data4$Group)
 data4$Site=as.factor(data4$Site)
 data4$Story=as.factor(data4$Story)
-s4=lmBF(Stress ~ Site + Story + Group ,data4,whichRandom=c("site","story"))
+s4=lmBF(Stress ~ Group + Site + Story ,data4,whichRandom=c("site","story"))
 
 # verify groups with (BF > 10 or BF < 0.1 or N > Nmax) 
 N_max=4800
