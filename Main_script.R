@@ -394,8 +394,8 @@ s2=lmBF(Stress ~ Group + Site + Story ,data2,whichRandom=c("site","story"))
 
 data3=data.frame(Stress=c(control_s,lk),
                  Group=c(rep("Control",length(control_s)),rep("LK",length(lk))),
-                 Site=c(control_site,mb_site),
-                 Story=c(control_story,mb_story))
+                 Site=c(control_site,lk_site),
+                 Story=c(control_story,lk_story))
 data3$Group=as.factor(data3$Group)
 data3$Site=as.factor(data3$Site)
 data3$Story=as.factor(data3$Story)
@@ -404,8 +404,8 @@ s3=lmBF(Stress ~ Group + Site + Story ,data3,whichRandom=c("site","story"))
 
 data4=data.frame(Stress=c(control_s,bs),
                  Group=c(rep("Control",length(control_s)),rep("BS",length(bs))),
-                 Site=c(control_site,mb_site),
-                 Story=c(control_story,mb_story))
+                 Site=c(control_site,bs_site),
+                 Story=c(control_story,bs_story))
 data4$Group=as.factor(data4$Group)
 data4$Site=as.factor(data4$Site)
 data4$Story=as.factor(data4$Story)
