@@ -22,7 +22,7 @@ library(tm)
 set.seed(10)
 
 # Load raw csv file - call the dataset sam_multisite.csv to make the script work
-Df <- read_survey("C:/Users/Filippo/Desktop/Alessandro/sam_multisite.csv") %>%
+Df <- read_survey("multisite.csv") %>%
   clean_names()
 
 # Adjust variables name
