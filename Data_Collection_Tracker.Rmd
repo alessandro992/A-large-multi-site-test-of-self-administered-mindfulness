@@ -1,7 +1,52 @@
 ---
-title: "Untitled"
-output: html_document
+title: "Multi-site - data collection tracker"
+author: "Alessandro Sparacio"
+date: "30/3/2022"
+fontsize: 13pt
+output:
+  html_document:
+    code_folding: show
+    toc: true # table of content true
+    toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    number_sections: true  ## if you want number sections at each table header
+    theme: united  # many options for theme, this one is my favorite.
+    highlight: tango  # specifies the syntax highlighting style
 ---
+
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 16px;
+  }
+td {  /* Table  */
+  font-size: 14px;
+}
+h1.title {
+  font-size: 38px;
+  color: DarkRed;
+}
+h1 { /* Header 1 */
+  font-size: 28px;
+  color: DarkBlue;
+}
+h2 { /* Header 2 */
+    font-size: 22px;
+  color: DarkBlue;
+}
+h3 { /* Header 3 */
+  font-size: 21px;
+  color: DarkBlue;
+}
+code.r{ /* Code block */
+    font-size: 12px;
+}
+pre { /* Code block - determines code spacing between lines */
+    font-size: 14px;
+}
+</style>
 
 ```{r echo=F,results=F, message=F,warning=F}
 # Required Libraries
@@ -18,11 +63,13 @@ library(semTools)
 library(psych)
 library(MBESS)
 library(tm)
+library(DT)
+library(kableExtra)
 
 set.seed(10)
 
 # Load raw csv file - call the dataset sam_multisite.csv to make the script work
-Df <- read_survey("multisite.csv") %>%
+Df <- read_survey("sam_multisite.csv") %>%
   clean_names()
 
 # Adjust variables name
@@ -105,7 +152,7 @@ Df$site[is.na(Df$site)]="absent"
 
 Df$site=as.factor(Df$site)
 Df$story=as.factor(Df$story)
-
+Df$group=as.factor(Df$group)
 
 # Creating different datasets from the csv file: ipip, stai,sam_arousal,
 # sam_control,sam_emotional,age,gender. For each scales we computed the sum, 
@@ -385,9 +432,10 @@ colnames(data1)=c("Stress","Group","Site","Story")
 data1$Group=as.factor(data1$Group)
 data1$Site=as.factor(data1$Site)
 data1$Story=as.factor(data1$Story)
-s1=lmBF(Stress ~ Group + Site + Story ,data1,whichRandom=c("Site","Story"))
+s1=lmBF(Stress ~ Group + Site + Story ,data1,whichRandom=c("site","story"))
 
 
+table(Df$story)
 data2=data.frame(Stress=c(control_s,mb),
                  Group=c(rep("Control",length(control_s)),rep("MB",length(mb))),
                  Site=c(control_site,mb_site),
@@ -396,6 +444,7 @@ data2$Group=as.factor(data2$Group)
 data2$Site=as.factor(data2$Site)
 data2$Story=as.factor(data2$Story)
 s2=lmBF(Stress ~ Group + Site + Story ,data2,whichRandom=c("site","story"))
+
 
 data3=data.frame(Stress=c(control_s,lk),
                  Group=c(rep("Control",length(control_s)),rep("LK",length(lk))),
@@ -415,6 +464,7 @@ data4$Group=as.factor(data4$Group)
 data4$Site=as.factor(data4$Site)
 data4$Story=as.factor(data4$Story)
 s4=lmBF(Stress ~ Group + Site + Story ,data4,whichRandom=c("site","story"))
+
 
 # verify groups with (BF > 10 or BF < 0.1 or N > Nmax) 
 N_max=4800
@@ -513,7 +563,7 @@ if(is.na(t3)==F){Sam_emotional_BF[3]=extractBF(t3)$bf[1]} else Sam_emotional_BF[
 if(is.na(t4)==F){Sam_emotional_BF[4]=extractBF(t4)$bf[1]} else Sam_emotional_BF[4]==NA
 
 
-data=data.frame(Comparison,Stress_BF,Sam_arousal_BF,Sam_control_BF,Sam_emotional_BF)
+data=data.frame(Comparison,Stress_BF)
 data
 
 # creating a  dataset with stai_avg e ipip_avg group, site, story
@@ -521,30 +571,9 @@ data
 # testing the moderation of neuroticism
 
 results<-merge(x=Stai,y=ipip,by="responseid",all.x=TRUE)
-results=results[,c(1,2,3,4,26,53)]
-colnames(results)=c("responseid","group","site","story","Stai_average","ipip_average")
-
-full <- lmBF(Stai_average ~ group +
-               ipip_average +
-               group:ipip_average +
-               site,
-             whichRandom=c("site","story"),
-             data=results)
-
-noInteraction <- lmBF(Stai_average ~ group +
-                        ipip_average +
-                        site,
-                      whichRandom=c("site","story"),
-                      data=results)
-
-allBFs <- c(full, noInteraction)
-allBFs
-
-full/noInteraction
-
-chainsFull <- posterior(full, iterations = 10000)
-#summary(chainsFull[,1:7])
-
+results=results[,c(1,2,3,4,26,27,53)]
+colnames(results)=c("responseid","group","site","story","Stai_average","Stai_median","ipip_average")
+results=results[(results$group %in% name == T),]
 
 # data collection tracker
 # check how many participants for each groups
@@ -560,40 +589,93 @@ colnames(d2)=c("Site","Subjects")
 
 ```
 
+# Distribution of participants for each site
+
+## Allocation of participants to groups
 
 ```{r warning=F, message=F,echo=F}
-d1
-d2
-data
-summary(posterior(full, iterations = 10000))
-summary(posterior(s1, iterations = 10000))
-summary(posterior(s2, iterations = 10000))
-summary(posterior(s3, iterations = 10000))
-summary(posterior(s4, iterations = 10000))
 
-if(is.na(t1)==F){summary(posterior(t1, iterations = 10000))} else print("NA")
-if(is.na(t2)==F){summary(posterior(t2, iterations = 10000))} else print("NA")
-if(is.na(t3)==F){summary(posterior(t3, iterations = 10000))} else print("NA")
-if(is.na(t4)==F){summary(posterior(t4, iterations = 10000))} else print("NA")
+d1  %>%
+    `colnames<-`(c("Site", "Subjects")) %>%
+  datatable(filter = "top", rownames = FALSE,
+            options = list(columnDefs = list(list(className = 'dt-center', targets = 1:5))),
+            caption = htmltools::tags$caption(
+    style = 'caption-side: bottom; text-align: center;',
+    'Table 1: ', htmltools::em('Distribution of subjects by site')))
+```
 
-if(is.na(t1b)==F){summary(posterior(t1b, iterations = 10000))} else print("NA")
-if(is.na(t2b)==F){summary(posterior(t2b, iterations = 10000))} else print("NA")
-if(is.na(t3b)==F){summary(posterior(t3b, iterations = 10000))} else print("NA")
-if(is.na(t4b)==F){summary(posterior(t4b, iterations = 10000))} else print("NA")
+## Participants for each site
 
-if(is.na(t1c)==F){summary(posterior(t1c, iterations = 10000))} else print("NA")
-if(is.na(t2c)==F){summary(posterior(t2c, iterations = 10000))} else print("NA")
-if(is.na(t3c)==F){summary(posterior(t3c, iterations = 10000))} else print("NA")
-if(is.na(t4c)==F){summary(posterior(t4c, iterations = 10000))} else print("NA")
+```{r warning=F, message=F,echo=F}
+
+d2  %>%
+    `colnames<-`(c("Site", "Subjects")) %>%
+  datatable(filter = "top", rownames = FALSE,
+            options = list(columnDefs = list(list(className = 'dt-center', targets = 1:5))),
+            caption = htmltools::tags$caption(
+    style = 'caption-side: bottom; text-align: center;',
+    'Table 2: ', htmltools::em('Distribution of subjects by site')))
+```
+
+# Bayes Factor for STAI, Form Y (short-term efficacy span stress)
+
+
+## Recap table
+
+```{r warning=F, message=F,echo=F}
+dataB=data[,c(1,2)]
+dataB$Stress_BF=round(dataB$Stress_BF,2)
+colnames(dataB)=c("Comparison","Stress Bayes Factor")
+
+dataB  %>%
+    `colnames<-`(c("Comparison", "Stress Bayes Factor")) %>%
+  datatable(filter = "top", rownames = FALSE,
+             options = list(columnDefs = list(list(className = 'dt-center', targets = 1:5))),
+            caption = htmltools::tags$caption(
+    style = 'caption-side: bottom; text-align: center;',
+    'Table 3: ', htmltools::em('Stress Bayes Factor for each comparison')))
 ```
 
 
-```{r warning=F, message=F,echo=F}
-library(lmerTest)
-Stai$group=as.factor(Stai$group)
-Stai$group <- relevel(Stai$group, ref = "condition5bookchapter")
 
-s3b=lmer(Stai_average ~ group+(1|site)+(1|story),data=Stai)
-summary(s3b)
+
+## Model 1: Control vs Mindful Walking
+
+```{r warning=F, message=F,echo=F}
+s1
+```
+
+
+## Model 2: Control vs Mindful Breathing
+
+```{r warning=F, message=F,echo=F}
+s2
+```
+
+
+## Model 3: Control vs Loving Kindness
+
+```{r warning=F, message=F,echo=F}
+s3
+```
+
+## Model 4: Control vs Body scan
+
+```{r warning=F, message=F,echo=F}
+s4
+```
+
+# Inspect Dataset
+
+```{r warning=F, message=F,echo=F}
+
+DataSet <- Df %>% select (start_date, end_date, group, site, story,responseid)
+
+DataSet  %>%
+  datatable(filter = "top", rownames = FALSE,
+             options = list(columnDefs = list(list(className = 'dt-center', targets = 1:5))),
+            caption = htmltools::tags$caption(
+    style = 'caption-side: bottom; text-align: center;',
+    'Table 4: ', htmltools::em('Dataset DataSet')))
 ```
 
