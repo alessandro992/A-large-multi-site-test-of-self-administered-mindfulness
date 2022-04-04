@@ -16,7 +16,7 @@ library(tm)
 set.seed(10)
 
 # Load raw csv file - call the dataset sam_multisite.csv to make the script work
-Df <- read_survey("sam_multisite.csv") %>%
+Df <- read_survey("4/3.csv") %>%
   clean_names()
 
 # Adjust variables name
@@ -98,8 +98,12 @@ Df$story[is.na(Df$story)]="absent"
 # where site is NA becomes "absent"
 Df$site[is.na(Df$site)]="absent"
 
+#a site failed to use his specific qualtrics link so need to allocate his participants to his site
+Df$site[Df$site == "en"] <- "INDI"
+
 Df$site=as.factor(Df$site)
 Df$story=as.factor(Df$story)
+
 
 
 # Creating different datasets from the csv file: ipip, stai,sam_arousal,

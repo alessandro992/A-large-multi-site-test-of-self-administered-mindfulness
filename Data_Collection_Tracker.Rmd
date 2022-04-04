@@ -1,19 +1,22 @@
 ---
-title: "Multi-site - data collection tracker"
+title: "A large multi-site of self-administered mindfulness - data collection tracker"
 author: "Alessandro Sparacio"
-date: "30/3/2022"
-fontsize: 13pt
+date: "4/3/2022"
 output:
   html_document:
     code_folding: show
-    toc: true # table of content true
-    toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
+    highlight: tango
+    number_sections: yes
+    theme: united
+    toc: yes
+    toc_depth: 3
     toc_float:
-      collapsed: true
-      smooth_scroll: true
-    number_sections: true  ## if you want number sections at each table header
-    theme: united  # many options for theme, this one is my favorite.
-    highlight: tango  # specifies the syntax highlighting style
+      collapsed: yes
+      smooth_scroll: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+fontsize: 13pt
 ---
 
 <style type="text/css">
@@ -69,7 +72,7 @@ library(kableExtra)
 set.seed(10)
 
 # Load raw csv file - call the dataset sam_multisite.csv to make the script work
-Df <- read_survey("sam_multisite.csv") %>%
+Df <- read_survey("4:3.csv") %>%
   clean_names()
 
 # Adjust variables name
@@ -149,6 +152,9 @@ Df$story[is.na(Df$story)]="absent"
 
 # where site is NA becomes "absent"
 Df$site[is.na(Df$site)]="absent"
+
+#a site failed to use his specific qualtrics link so need to allocate his participants to his site
+Df$site[Df$site == "en"] <- "INDI"
 
 Df$site=as.factor(Df$site)
 Df$story=as.factor(Df$story)
@@ -589,7 +595,7 @@ colnames(d2)=c("Site","Subjects")
 
 ```
 
-# Distribution of participants for each site
+# Distribution of participants 
 
 ## Allocation of participants to groups
 
