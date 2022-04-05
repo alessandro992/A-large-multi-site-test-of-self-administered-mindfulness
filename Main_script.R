@@ -16,7 +16,7 @@ library(tm)
 set.seed(10)
 
 # Load raw csv file - call the dataset sam_multisite.csv to make the script work
-Df <- read_survey("4/3.csv") %>%
+Df <- read_survey("4:3.csv") %>%
   clean_names()
 
 # Adjust variables name
