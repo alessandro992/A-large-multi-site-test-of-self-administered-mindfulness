@@ -1,7 +1,7 @@
 ---
 title: "A large multi-site of self-administered mindfulness - data collection tracker"
 author: "Alessandro Sparacio"
-date: "4/3/2022"
+date: "5/3/2022"
 output:
   html_document:
     code_folding: show
@@ -66,7 +66,8 @@ library(semTools)
 library(psych)
 library(MBESS)
 library(tm)
-library(tidyr)
+library(DT)
+library(kableExtra)
 
 set.seed(10)
 
@@ -92,7 +93,7 @@ Df <- Df %>% rename(responseid = response_id,
                     group = fl_13_do,
                     story=fl_123_do) 
 
-Df2 <- read_survey("newdata.csv") %>%
+Df2 <- read_survey("5:3.csv") %>%
   clean_names()
 
 names(Df2) <- tolower(names(Df2))
@@ -635,12 +636,12 @@ colnames(d2)=c("Site","Subjects")
 ```{r warning=F, message=F,echo=F}
 
 d1  %>%
-    `colnames<-`(c("Site", "Subjects")) %>%
+    `colnames<-`(c("Site", "Participants")) %>%
   datatable(filter = "top", rownames = FALSE,
             options = list(columnDefs = list(list(className = 'dt-center', targets = 1:5))),
             caption = htmltools::tags$caption(
     style = 'caption-side: bottom; text-align: center;',
-    'Table 1: ', htmltools::em('Distribution of subjects by site')))
+    'Table 1: ', htmltools::em('Distribution of participants per site')))
 ```
 
 ## Participants for each site
@@ -648,12 +649,12 @@ d1  %>%
 ```{r warning=F, message=F,echo=F}
 
 d2  %>%
-    `colnames<-`(c("Site", "Subjects")) %>%
+    `colnames<-`(c("Site", "Participants")) %>%
   datatable(filter = "top", rownames = FALSE,
             options = list(columnDefs = list(list(className = 'dt-center', targets = 1:5))),
             caption = htmltools::tags$caption(
     style = 'caption-side: bottom; text-align: center;',
-    'Table 2: ', htmltools::em('Distribution of subjects by site')))
+    'Table 2: ', htmltools::em('Distribution of participants per site')))
 ```
 
 # Bayes Factor for STAI, Form Y (short-term efficacy span stress)
