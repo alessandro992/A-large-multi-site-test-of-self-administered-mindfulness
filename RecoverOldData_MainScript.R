@@ -12,12 +12,24 @@ library(semTools)
 library(psych)
 library(MBESS)
 library(tm)
+library(tidyr)
 
 set.seed(10)
 
+#We had a problem at a certain point of the data collection, when we changed the survey flow
+#because we had to close the allocation to a condition.This caused a loss of information as related 
+#to the group allocation for the previous participants. Fortunatly We downloaded the data just before doing 
+#the change and in this way we can transfer the information of the old dataset to the new  dataset
+#as related to the group allocation by matching the same responseid
+
 # Load raw csv file - call the dataset sam_multisite.csv to make the script work
-Df <- read_survey("4:3.csv") %>%
+Df <- read_survey("olddata.csv") %>%
   clean_names()
+
+old_groups <-
+  Df %>% 
+  select(responseid = response_id,
+         old_group = fl_13_do)
 
 # Adjust variables name
 names(Df) <- tolower(names(Df))
@@ -25,6 +37,22 @@ Df <- Df %>% rename(responseid = response_id,
                     site = user_language,
                     group = fl_13_do,
                     story=fl_123_do) 
+
+Df2 <- read_survey("newdata.csv") %>%
+  clean_names()
+
+names(Df2) <- tolower(names(Df2))
+Df2 <- Df2 %>% rename(responseid = response_id,
+                    site = user_language,
+                    group = fl_158_do,
+                    story= fl_123_do) 
+
+Df <- 
+  Df2 %>% 
+  left_join(old_groups, by = "responseid") %>% 
+  mutate(group = coalesce(group, old_group)) %>% 
+  select(-old_group)
+
 
 Df$site=as.character(Df$site)
 Df$site=tolower(Df$site)
@@ -50,9 +78,13 @@ Df <- Df[Df$duration_in_seconds > 946,]
 # remove duplicates in RESPONSEID
 Df[!duplicated(Df$responseid),]
 
+#no need for this df anymore
+rm(Df2)
+
+
 # remove individuals with 50% items responses missing
 Df2=Df %>% 
-      select(starts_with("ipip"),starts_with("stai"))
+  select(starts_with("ipip"),starts_with("stai"))
 Df2$check=rowSums(is.na(Df2))/40
 check=Df2$check
 Df=cbind(Df,check)
@@ -71,11 +103,13 @@ for (i in 1:nrow(Df)){
 }
 for (i in 1:nrow(De)){
   b=max(table(De[i,])/length(De[i,]))
-if (b>0.5) {CK[i]=1} else {CK[i]=0}
+  if (b>0.5) {CK[i]=1} else {CK[i]=0}
 }
 Df=cbind(Df,CH,CK)
 Df=Df[Df$CH==0 & Df$CK==0,]
 
+#A group has been saved differently by Qualtrics
+Df$group[Df$group == "BL_5axdKgbAbaOEiXA"] <- "condition1mindfulwalking"
 
 # Cleaning of group and story 
 Df$group=as.character(Df$group)
@@ -430,11 +464,11 @@ if(("condition1mindfulwalking" %in% name)==T){
   
   D1=sam_emotional[sam_emotional$group == "condition5bookchapter" | sam_emotional$group == "condition1mindfulwalking",]
   t1=lmBF(sam1 ~ group +site+story,D1,whichRandom=c("site","story"))
-          
+  
   
   D2=sam_arousal[sam_arousal$group == "condition5bookchapter" | sam_arousal$group == "condition1mindfulwalking",]
   t1b=lmBF(sam2 ~ group +site+story,D2,whichRandom=c("site","story"))
-           
+  
   
   D3=sam_control[sam_control$group == "condition5bookchapter" | sam_control$group == "condition1mindfulwalking",]
   t1c=lmBF(sam3 ~ group +site+story,D3,whichRandom=c("site","story"))
@@ -533,11 +567,11 @@ summary(chainsFull[,1:7])
 
 # data collection tracker
 # check how many participants for each groups
-d=as.data.frame(table(Df$group))
+d1=as.data.frame(table(Df$group))
 colnames(d)=c("Group","Subjects")
-d
+d1
 
 # check how many participants for site
-d=as.data.frame(table(Df$site))
+d2=as.data.frame(table(Df$site))
 colnames(d)=c("Site","Subjects")
-d
+d2
