@@ -47,13 +47,15 @@ Df2 <- Df2 %>% rename(responseid = response_id,
                     group = fl_158_do,
                     story= fl_123_do) 
 
-#Df <- Df2
 
 Df <- 
   Df2 %>% 
   left_join(old_groups, by = "responseid") %>% 
   mutate(group = coalesce(group, old_group)) %>% 
   select(-old_group)
+
+#Code to write the dataset (with information related to the allocation to groups of the old dataset)
+#write_csv2(Df,"~/Google Drive/R stuff/A-large-multi-site-test-of-self-administered-mindfulness/nameofthedata_recoveredgr_allocation.csv")
 
 
 Df$site=as.character(Df$site)
@@ -422,8 +424,8 @@ if(nrow(c2)<n){
 # computing the lmBF function for each experimental condition and the control group with sites and story as random factor for STAI
 data1=data.frame(Stress=c(control_s,mw),
                  Group=c(rep("Control",length(control_s)),rep("MW",length(mw))),
-                 Site=c(control_site,mw_site),
-                 Story=c(control_story,mw_story))
+                 Site=c(as.character(control_site),as.character(mw_site)),
+                 Story=c(as.character(control_story),as.character(mw_story)))
 colnames(data1)=c("Stress","Group","Site","Story")
 data1$Group=as.factor(data1$Group)
 data1$Site=as.factor(data1$Site)
@@ -433,8 +435,8 @@ s1=lmBF(Stress ~ Group + Site + Story ,data1,whichRandom=c("Site","Story"))
 
 data2=data.frame(Stress=c(control_s,mb),
                  Group=c(rep("Control",length(control_s)),rep("MB",length(mb))),
-                 Site=c(control_site,mb_site),
-                 Story=c(control_story,mb_story))
+                 Site=c(as.character(control_site), as.character(mb_site)),
+                 Story=c(as.character(control_story),as.character(mb_story)))
 data2$Group=as.factor(data2$Group)
 data2$Site=as.factor(data2$Site)
 data2$Story=as.factor(data2$Story)
@@ -442,8 +444,8 @@ s2=lmBF(Stress ~ Group + Site + Story ,data2,whichRandom=c("site","story"))
 
 data3=data.frame(Stress=c(control_s,lk),
                  Group=c(rep("Control",length(control_s)),rep("LK",length(lk))),
-                 Site=c(control_site,lk_site),
-                 Story=c(control_story,lk_story))
+                 Site=c(as.character(control_site),as.character(lk_site)),
+                 Story=c(as.character(control_story),as.character(lk_story)))
 data3$Group=as.factor(data3$Group)
 data3$Site=as.factor(data3$Site)
 data3$Story=as.factor(data3$Story)
@@ -452,8 +454,8 @@ s3=lmBF(Stress ~ Group + Site + Story ,data3,whichRandom=c("site","story"))
 
 data4=data.frame(Stress=c(control_s,bs),
                  Group=c(rep("Control",length(control_s)),rep("BS",length(bs))),
-                 Site=c(control_site,bs_site),
-                 Story=c(control_story,bs_story))
+                 Site=c(as.character(control_site),as.character(bs_site)),
+                 Story=c(as.character(control_story),as.character(bs_story)))
 data4$Group=as.factor(data4$Group)
 data4$Site=as.factor(data4$Site)
 data4$Story=as.factor(data4$Story)
@@ -535,14 +537,28 @@ Comparison=c("Control vs  Mindful Walking",
              "Control vs  loving Kindness",
              "Control vs  Body Scan")
 Stress_BF=c(value[1],value[2],value[3],value[4])
-Sam_arousal_BF=c(extractBF(t1b)$bf[1],extractBF(t2b)$bf[1],
-                 extractBF(t3b)$bf[1],extractBF(t4b)$bf[1])
-Sam_control_BF=c(extractBF(t1c)$bf[1],extractBF(t2c)$bf[1],
-                 extractBF(t3c)$bf[1],extractBF(t4c)$bf[1])
-Sam_emotional_BF=c(extractBF(t1)$bf[1],extractBF(t2)$bf[1],
-                   extractBF(t3)$bf[1],extractBF(t4)$bf[1])
 
-data=data.frame(Comparison,Stress_BF,Sam_arousal_BF,Sam_control_BF,Sam_emotional_BF)
+Sam_arousal_BF=c()
+if(is.na(t1b)==F){Sam_arousal_BF[1]=extractBF(t1b)$bf[1]} else Sam_arousal_BF[1]==NA
+if(is.na(t2b)==F){Sam_arousal_BF[2]=extractBF(t2b)$bf[1]} else Sam_arousal_BF[2]==NA
+if(is.na(t3b)==F){Sam_arousal_BF[3]=extractBF(t3b)$bf[1]} else Sam_arousal_BF[3]==NA
+if(is.na(t4b)==F){Sam_arousal_BF[4]=extractBF(t4b)$bf[1]} else Sam_arousal_BF[4]==NA
+
+Sam_control_BF=c()
+if(is.na(t1c)==F){Sam_control_BF[1]=extractBF(t1c)$bf[1]} else Sam_control_BF[1]==NA
+if(is.na(t2c)==F){Sam_control_BF[2]=extractBF(t2c)$bf[1]} else Sam_control_BF[2]==NA
+if(is.na(t3c)==F){Sam_control_BF[3]=extractBF(t3c)$bf[1]} else Sam_control_BF[3]==NA
+if(is.na(t4c)==F){Sam_control_BF[4]=extractBF(t4c)$bf[1]} else Sam_control_BF[4]==NA
+
+
+Sam_emotional_BF=c()
+if(is.na(t1)==F){Sam_emotional_BF[1]=extractBF(t1)$bf[1]} else Sam_emotional_BF[1]==NA
+if(is.na(t2)==F){Sam_emotional_BF[2]=extractBF(t2)$bf[1]} else Sam_emotional_BF[2]==NA
+if(is.na(t3)==F){Sam_emotional_BF[3]=extractBF(t3)$bf[1]} else Sam_emotional_BF[3]==NA
+if(is.na(t4)==F){Sam_emotional_BF[4]=extractBF(t4)$bf[1]} else Sam_emotional_BF[4]==NA
+
+
+data=data.frame(Comparison,Stress_BF, Sam_arousal_BF, Sam_control_BF, Sam_emotional_BF)
 data
 
 # creating a  dataset with stai_avg e ipip_avg group, site, story
@@ -578,11 +594,11 @@ summary(chainsFull[,1:7])
 # data collection tracker
 # check how many participants for each groups
 d1=as.data.frame(table(Df$group))
-colnames(d)=c("Group","Subjects")
+colnames(d)=c("Group","Participants")
 d1
 
 # check how many participants for site
 d2=as.data.frame(table(Df$site))
-colnames(d)=c("Site","Subjects")
+colnames(d)=c("Site","Participants")
 d2
 
