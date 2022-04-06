@@ -38,7 +38,7 @@ Df <- Df %>% rename(responseid = response_id,
                     group = fl_13_do,
                     story=fl_123_do) 
 
-Df2 <- read_survey("newdata.csv") %>%
+Df2 <- read_survey("test.csv") %>%
   clean_names()
 
 names(Df2) <- tolower(names(Df2))
@@ -46,6 +46,8 @@ Df2 <- Df2 %>% rename(responseid = response_id,
                     site = user_language,
                     group = fl_158_do,
                     story= fl_123_do) 
+
+#Df <- Df2
 
 Df <- 
   Df2 %>% 
@@ -108,8 +110,16 @@ for (i in 1:nrow(De)){
 Df=cbind(Df,CH,CK)
 Df=Df[Df$CH==0 & Df$CK==0,]
 
-#A group has been saved differently by Qualtrics
+#Each time a group has been closed it loses its original name and a random code it is assigned to it, here
+#we are giving back the name corresponding to its condition
+
+#first closure of one group 4/3/2022 (mindful walking) 
 Df$group[Df$group == "BL_5axdKgbAbaOEiXA"] <- "condition1mindfulwalking"
+
+#second closure of two group 5/3/2022 (Loving kindness and body scan) 
+
+Df$group[Df$group == "BL_4HCNS9wf6EYigQe"] <- "condition3lovingkindness"
+Df$group[Df$group == "BL_cAzC094kCCPCDYO"] <- "condition4bodyscan"
 
 # Cleaning of group and story 
 Df$group=as.character(Df$group)
@@ -575,3 +585,4 @@ d1
 d2=as.data.frame(table(Df$site))
 colnames(d)=c("Site","Subjects")
 d2
+
