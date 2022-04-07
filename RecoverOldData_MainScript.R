@@ -20,7 +20,10 @@ set.seed(10)
 #because we had to close the allocation to a condition.This caused a loss of information as related 
 #to the group allocation for the previous participants. Fortunatly We downloaded the data just before doing 
 #the change and in this way we can transfer the information of the old dataset to the new  dataset
-#as related to the group allocation by matching the same responseid
+#as related to the group allocation by matching the same responseid. This happened two times because we had to 
+#change the survey flow twice.
+
+# Fix of the data after the 1st time we changed the survey flow
 
 # Load raw csv file - call the dataset sam_multisite.csv to make the script work
 Df <- read_survey("olddata.csv") %>%
@@ -38,14 +41,14 @@ Df <- Df %>% rename(responseid = response_id,
                     group = fl_13_do,
                     story=fl_123_do) 
 
-Df2 <- read_survey("test.csv") %>%
+Df2 <- read_survey("middledata.csv") %>%
   clean_names()
 
 names(Df2) <- tolower(names(Df2))
 Df2 <- Df2 %>% rename(responseid = response_id,
-                    site = user_language,
-                    group = fl_158_do,
-                    story= fl_123_do) 
+                      site = user_language,
+                      group = fl_158_do,
+                      story= fl_123_do) 
 
 
 Df <- 
@@ -54,9 +57,40 @@ Df <-
   mutate(group = coalesce(group, old_group)) %>% 
   select(-old_group)
 
+# Fix of the data after the 2nd time we changed the survey flow
+
+Df3 <- read_survey("newdata.csv") %>%
+  clean_names()
+
+old_groups <-
+  Df %>% 
+  select(responseid, 
+         old_group = group)
+
+names(Df3) <- tolower(names(Df3))
+Df3 <- Df3 %>% rename(responseid = response_id,
+                      site = user_language,
+                      group = fl_166_do,
+                      story= fl_123_do) 
+
+Df <- 
+  Df3 %>% 
+  left_join(old_groups, by = "responseid") %>% 
+  mutate(group = coalesce(group, old_group)) %>% 
+  select(-old_group)
+
+#Each time a group has been closed it loses its original name and a random code it is assigned to it, here
+#we are giving back the name corresponding to its condition
+
+#first closure of one group 4/3/2022 (mindful walking) 
+Df$group[Df$group == "BL_5axdKgbAbaOEiXA"] <- "condition1mindfulwalking"
+
+#second closure of two group 5/3/2022 (Loving kindness and body scan) 
+Df$group[Df$group == "BL_4HCNS9wf6EYigQe"] <- "condition3lovingkindness"
+Df$group[Df$group == "BL_cAzC094kCCPCDYO"] <- "condition4bodyscan"
+
 #Code to write the dataset (with information related to the allocation to groups of the old dataset)
 #write_csv2(Df,"~/Google Drive/R stuff/A-large-multi-site-test-of-self-administered-mindfulness/nameofthedata_recoveredgr_allocation.csv")
-
 
 Df$site=as.character(Df$site)
 Df$site=tolower(Df$site)
@@ -84,7 +118,8 @@ Df[!duplicated(Df$responseid),]
 
 #no need for this df anymore
 rm(Df2)
-
+rm(Df3)
+rm(old_groups)
 
 # remove individuals with 50% items responses missing
 Df2=Df %>% 
@@ -111,17 +146,6 @@ for (i in 1:nrow(De)){
 }
 Df=cbind(Df,CH,CK)
 Df=Df[Df$CH==0 & Df$CK==0,]
-
-#Each time a group has been closed it loses its original name and a random code it is assigned to it, here
-#we are giving back the name corresponding to its condition
-
-#first closure of one group 4/3/2022 (mindful walking) 
-Df$group[Df$group == "BL_5axdKgbAbaOEiXA"] <- "condition1mindfulwalking"
-
-#second closure of two group 5/3/2022 (Loving kindness and body scan) 
-
-Df$group[Df$group == "BL_4HCNS9wf6EYigQe"] <- "condition3lovingkindness"
-Df$group[Df$group == "BL_cAzC094kCCPCDYO"] <- "condition4bodyscan"
 
 # Cleaning of group and story 
 Df$group=as.character(Df$group)
@@ -594,11 +618,11 @@ summary(chainsFull[,1:7])
 # data collection tracker
 # check how many participants for each groups
 d1=as.data.frame(table(Df$group))
-colnames(d)=c("Group","Participants")
+colnames(d1)=c("Group","Participants")
 d1
 
 # check how many participants for site
 d2=as.data.frame(table(Df$site))
-colnames(d)=c("Site","Participants")
+colnames(d2)=c("Site","Participants")
 d2
 
