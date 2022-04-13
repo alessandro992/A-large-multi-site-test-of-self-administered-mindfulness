@@ -89,12 +89,6 @@ Df$group[Df$group == "BL_5axdKgbAbaOEiXA"] <- "condition1mindfulwalking"
 Df$group[Df$group == "BL_4HCNS9wf6EYigQe"] <- "condition3lovingkindness"
 Df$group[Df$group == "BL_cAzC094kCCPCDYO"] <- "condition4bodyscan"
 
-#a site failed to use his specific qualtrics link so need to allocate his participants to his site
-Df$site[Df$site == "en"] <- "indi"
-
-#Code to write the dataset (with information related to the allocation to groups of the old dataset)
-#write_csv2(Df,"~/Google Drive/R stuff/A-large-multi-site-test-of-self-administered-mindfulness/nameofthedata_recoveredgr_allocation.csv")
-
 Df$site=as.character(Df$site)
 Df$site=tolower(Df$site)
 Df$site=trimws(Df$site, whitespace = "[\\h\\v\\t ]")
@@ -102,6 +96,11 @@ Df$site=trimws(Df$site)
 Df$site=gsub(" ","",Df$site)
 Df$site=removePunctuation(Df$site)
 
+#a site failed to use his specific qualtrics link so need to allocate his participants to his site
+Df$site[Df$site == "en"] <- "indi"
+
+#Code to write the dataset (with information related to the allocation to groups of the old dataset)
+#write_csv2(Df,"~/Google Drive/R stuff/A-large-multi-site-test-of-self-administered-mindfulness/nameofthedata_recoveredgr_allocation.csv")
 
 # remove rows with missing RESPONSEID 
 Df <- Df[!(is.na(Df$responseid)==T),]
