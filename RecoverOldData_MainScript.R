@@ -96,8 +96,22 @@ Df$site=trimws(Df$site)
 Df$site=gsub(" ","",Df$site)
 Df$site=removePunctuation(Df$site)
 
-#a site failed to use his specific qualtrics link so need to allocate his participants to his site
-Df$site[Df$site == "en"] <- "indi"
+#some sites gave the generic link to participants, as a result of this we lost the info 
+#as related to their site. We recovered that info by looking at the answer that participants give
+#to the question "univ" 
+
+Df$univ=as.character(Df$univ)
+Df$univ=tolower(Df$univ)
+Df$univ=trimws(Df$univ, whitespace = "[\\h\\v\\t ]")
+Df$univ=trimws(Df$univ)
+Df$univ=gsub(" ","",Df$univ)
+Df$univ=removePunctuation(Df$univ)
+
+Df$site[Df$univ == "universityofsouthernindiana"] <- "indi"
+Df$site[Df$univ == "usi"] <- "indi"
+
+Df$site[Df$univ == "universityofutah"] <- "utah"
+Df$site[Df$site == "en"] <- "utah"
 
 #Code to write the dataset (with information related to the allocation to groups of the old dataset)
 #write_csv2(Df,"~/Google Drive/R stuff/A-large-multi-site-test-of-self-administered-mindfulness/nameofthedata_recoveredgr_allocation.csv")
