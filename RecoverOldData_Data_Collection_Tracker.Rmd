@@ -142,9 +142,6 @@ Df$group[Df$group == "BL_5axdKgbAbaOEiXA"] <- "condition1mindfulwalking"
 Df$group[Df$group == "BL_4HCNS9wf6EYigQe"] <- "condition3lovingkindness"
 Df$group[Df$group == "BL_cAzC094kCCPCDYO"] <- "condition4bodyscan"
 
-#Code to write the dataset (with information related to the allocation to groups of the old dataset)
-#write_csv2(Df,"~/Google Drive/R stuff/A-large-multi-site-test-of-self-administered-mindfulness/nameofthedata_recoveredgr_allocation.csv")
-
 Df$site=as.character(Df$site)
 Df$site=tolower(Df$site)
 Df$site=trimws(Df$site, whitespace = "[\\h\\v\\t ]")
@@ -152,6 +149,25 @@ Df$site=trimws(Df$site)
 Df$site=gsub(" ","",Df$site)
 Df$site=removePunctuation(Df$site)
 
+#some sites gave the generic link to participants, as a result of this we lost the info 
+#as related to their site. We recovered that info by looking at the answer that participants give
+#to the question "univ" 
+
+Df$univ=as.character(Df$univ)
+Df$univ=tolower(Df$univ)
+Df$univ=trimws(Df$univ, whitespace = "[\\h\\v\\t ]")
+Df$univ=trimws(Df$univ)
+Df$univ=gsub(" ","",Df$univ)
+Df$univ=removePunctuation(Df$univ)
+
+Df$site[Df$univ == "universityofsouthernindiana"] <- "indi"
+Df$site[Df$univ == "usi"] <- "indi"
+
+Df$site[Df$univ == "universityofutah"] <- "utah"
+Df$site[Df$site == "en"] <- "utah"
+
+#Code to write the dataset (with information related to the allocation to groups of the old dataset)
+#write_csv2(Df,"~/Google Drive/R stuff/A-large-multi-site-test-of-self-administered-mindfulness/nameofthedata_recoveredgr_allocation.csv")
 
 # remove rows with missing RESPONSEID 
 Df <- Df[!(is.na(Df$responseid)==T),]
@@ -171,7 +187,8 @@ Df[!duplicated(Df$responseid),]
 
 #no need for this df anymore
 rm(Df2)
-
+rm(Df3)
+rm(old_groups)
 
 # remove individuals with 50% items responses missing
 Df2=Df %>% 
@@ -199,17 +216,6 @@ for (i in 1:nrow(De)){
 Df=cbind(Df,CH,CK)
 Df=Df[Df$CH==0 & Df$CK==0,]
 
-#Each time a group has been closed it loses its original name and a random code it is assigned to it, here
-#we are giving back the name corresponding to its condition
-
-#first closure of one group 4/3/2022 (mindful walking) 
-Df$group[Df$group == "BL_5axdKgbAbaOEiXA"] <- "condition1mindfulwalking"
-
-#second closure of two group 5/3/2022 (Loving kindness and body scan) 
-
-Df$group[Df$group == "BL_4HCNS9wf6EYigQe"] <- "condition3lovingkindness"
-Df$group[Df$group == "BL_cAzC094kCCPCDYO"] <- "condition4bodyscan"
-
 # Cleaning of group and story 
 Df$group=as.character(Df$group)
 Df$group=tolower(Df$group)
@@ -231,13 +237,8 @@ Df$story[is.na(Df$story)]="absent"
 # where site is NA becomes "absent"
 Df$site[is.na(Df$site)]="absent"
 
-#a site failed to use his specific qualtrics link so need to allocate his participants to his site
-Df$site[Df$site == "en"] <- "indi"
-
 Df$site=as.factor(Df$site)
 Df$story=as.factor(Df$story)
-
-
 
 # Creating different datasets from the csv file: ipip, stai,sam_arousal,
 # sam_control,sam_emotional,age,gender. For each scales we computed the sum, 
