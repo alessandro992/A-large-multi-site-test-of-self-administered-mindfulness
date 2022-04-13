@@ -59,7 +59,7 @@ Df <-
 
 # Fix of the data after the 2nd time we changed the survey flow
 
-Df3 <- read_survey("newdata.csv") %>%
+Df3 <- read_survey("test.csv") %>%
   clean_names()
 
 old_groups <-
@@ -88,6 +88,9 @@ Df$group[Df$group == "BL_5axdKgbAbaOEiXA"] <- "condition1mindfulwalking"
 #second closure of two group 5/3/2022 (Loving kindness and body scan) 
 Df$group[Df$group == "BL_4HCNS9wf6EYigQe"] <- "condition3lovingkindness"
 Df$group[Df$group == "BL_cAzC094kCCPCDYO"] <- "condition4bodyscan"
+
+#a site failed to use his specific qualtrics link so need to allocate his participants to his site
+Df$site[Df$site == "en"] <- "indi"
 
 #Code to write the dataset (with information related to the allocation to groups of the old dataset)
 #write_csv2(Df,"~/Google Drive/R stuff/A-large-multi-site-test-of-self-administered-mindfulness/nameofthedata_recoveredgr_allocation.csv")
@@ -167,9 +170,6 @@ Df$story[is.na(Df$story)]="absent"
 
 # where site is NA becomes "absent"
 Df$site[is.na(Df$site)]="absent"
-
-#a site failed to use his specific qualtrics link so need to allocate his participants to his site
-Df$site[Df$site == "en"] <- "indi"
 
 Df$site=as.factor(Df$site)
 Df$story=as.factor(Df$story)
