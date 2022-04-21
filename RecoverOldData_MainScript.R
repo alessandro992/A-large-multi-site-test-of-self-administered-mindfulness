@@ -109,10 +109,12 @@ Df$univ=removePunctuation(Df$univ)
 
 Df$site[Df$univ == "universityofsouthernindiana"] <- "indi"
 Df$site[Df$univ == "usi"] <- "indi"
-
+Df$site[Df$univ == "stolafcollege"] <- "olaf"
 Df$site[Df$univ == "universityofutah"] <- "utah"
 Df$site[Df$site == "en"] <- "utah"
 
+
+dfa <- Df %>% select(site,univ)
 #Code to write the dataset (with information related to the allocation to groups of the old dataset)
 #write_csv2(Df,"~/Google Drive/R stuff/A-large-multi-site-test-of-self-administered-mindfulness/nameofthedata_recoveredgr_allocation.csv")
 
