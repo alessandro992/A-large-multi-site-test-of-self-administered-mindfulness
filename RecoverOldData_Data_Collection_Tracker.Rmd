@@ -1,7 +1,7 @@
 ---
 title: "A large multi-site test of self-administered mindfulness - data collection tracker"
 author: "Alessandro Sparacio"
-date: "13/4/2022"
+date: "19/4/2022"
 output:
   html_document:
     code_folding: show
@@ -162,7 +162,7 @@ Df$univ=removePunctuation(Df$univ)
 
 Df$site[Df$univ == "universityofsouthernindiana"] <- "indi"
 Df$site[Df$univ == "usi"] <- "indi"
-
+Df$site[Df$univ == "stolafcollege"] <- "olaf"
 Df$site[Df$univ == "universityofutah"] <- "utah"
 Df$site[Df$site == "en"] <- "utah"
 
