@@ -1,7 +1,7 @@
 ---
-title: "A large multi-site of self-administered mindfulness - data collection tracker"
+title: "A large multi-site test of self-administered mindfulness - data collection tracker"
 author: "Alessandro Sparacio"
-date: "4/3/2022"
+date: "30/6/2022"
 output:
   html_document:
     code_folding: show
@@ -71,24 +71,17 @@ library(kableExtra)
 
 set.seed(10)
 
-# Load raw csv file - call the dataset sam_multisite.csv to make the script work
-Df <- read_survey("4:3.csv") %>%
-  clean_names()
+#load the final dataset
 
-# Adjust variables name
-names(Df) <- tolower(names(Df))
-Df <- Df %>% rename(responseid = response_id,
-                    site = user_language,
-                    group = fl_13_do,
-                    story=fl_123_do) 
+Df <- read_csv2("finaldata.csv") 
 
-Df$site=as.character(Df$site)
-Df$site=tolower(Df$site)
-Df$site=trimws(Df$site, whitespace = "[\\h\\v\\t ]")
-Df$site=trimws(Df$site)
-Df$site=gsub(" ","",Df$site)
-Df$site=removePunctuation(Df$site)
-
+#count participants that did not fit inclusion criteria
+#dfb <- Df %>% count(q110)
+#dfa <- Df %>% count(mental)
+#dfc <- Df %>% count(meditation_exp)
+#dfd <- Df %>% count(eng_level)
+#dfe <- Df %>% count(gender)
+#dff <- Df %>% count(student)
 
 # remove rows with missing RESPONSEID 
 Df <- Df[!(is.na(Df$responseid)==T),]
@@ -97,17 +90,19 @@ Df <- Df[!(is.na(Df$responseid)==T),]
 Df <- Df[!(is.na(Df$group)==T),]
 
 # remove rows with AGE=999
+Df <- Df[Df$age != "999",]
 Df <- Df[Df$age != 999,]
 
-# remove rows with DURATION <946
-Df <- Df[Df$duration_in_seconds > 946,]
+# check observations for site overall (including careless respondents):
+d2=as.data.frame(table(Df$site))
+colnames(d2)=c("Site","Participants")
 
 # remove duplicates in RESPONSEID
 Df[!duplicated(Df$responseid),]
 
 # remove individuals with 50% items responses missing
 Df2=Df %>% 
-      select(starts_with("ipip"),starts_with("stai"))
+  select(starts_with("ipip"),starts_with("stai"))
 Df2$check=rowSums(is.na(Df2))/40
 check=Df2$check
 Df=cbind(Df,check)
@@ -126,11 +121,10 @@ for (i in 1:nrow(Df)){
 }
 for (i in 1:nrow(De)){
   b=max(table(De[i,])/length(De[i,]))
-if (b>0.5) {CK[i]=1} else {CK[i]=0}
+  if (b>0.5) {CK[i]=1} else {CK[i]=0}
 }
 Df=cbind(Df,CH,CK)
 Df=Df[Df$CH==0 & Df$CK==0,]
-
 
 # Cleaning of group and story 
 Df$group=as.character(Df$group)
@@ -153,12 +147,14 @@ Df$story[is.na(Df$story)]="absent"
 # where site is NA becomes "absent"
 Df$site[is.na(Df$site)]="absent"
 
-#a site failed to use his specific qualtrics link so need to allocate his participants to his site
-Df$site[Df$site == "en"] <- "INDI"
-
 Df$site=as.factor(Df$site)
 Df$story=as.factor(Df$story)
-Df$group=as.factor(Df$group)
+
+#no need for these datasets anymore
+rm(d2)
+rm(Dd)
+rm(De)
+rm(Df2)
 
 # Creating different datasets from the csv file: ipip, stai,sam_arousal,
 # sam_control,sam_emotional,age,gender. For each scales we computed the sum, 
@@ -373,7 +369,6 @@ age <- Df %>%
          median = median(age),
          sd = sd(age))
 
-
 # group means for STAI_AVERAGE 
 Stai %>%
   group_by(group) %>%
@@ -381,7 +376,7 @@ Stai %>%
 
 
 # selecting scores STAI for each group if n > 100 otherwise it will be a Nas
-n=15
+n=100
 
 c5=filter(Stai, group == "condition5bookchapter" ) 
 if(nrow(c5) < n){
@@ -432,30 +427,28 @@ if(nrow(c2)<n){
 # computing the lmBF function for each experimental condition and the control group with sites and story as random factor for STAI
 data1=data.frame(Stress=c(control_s,mw),
                  Group=c(rep("Control",length(control_s)),rep("MW",length(mw))),
-                 Site=c(control_site,mw_site),
-                 Story=c(control_story,mw_story))
+                 Site=c(as.character(control_site),as.character(mw_site)),
+                 Story=c(as.character(control_story),as.character(mw_story)))
 colnames(data1)=c("Stress","Group","Site","Story")
 data1$Group=as.factor(data1$Group)
 data1$Site=as.factor(data1$Site)
 data1$Story=as.factor(data1$Story)
-s1=lmBF(Stress ~ Group + Site + Story ,data1,whichRandom=c("site","story"))
+s1=lmBF(Stress ~ Group + Site + Story ,data1,whichRandom=c("Site","Story"))
 
 
-table(Df$story)
 data2=data.frame(Stress=c(control_s,mb),
                  Group=c(rep("Control",length(control_s)),rep("MB",length(mb))),
-                 Site=c(control_site,mb_site),
-                 Story=c(control_story,mb_story))
+                 Site=c(as.character(control_site), as.character(mb_site)),
+                 Story=c(as.character(control_story),as.character(mb_story)))
 data2$Group=as.factor(data2$Group)
 data2$Site=as.factor(data2$Site)
 data2$Story=as.factor(data2$Story)
 s2=lmBF(Stress ~ Group + Site + Story ,data2,whichRandom=c("site","story"))
 
-
 data3=data.frame(Stress=c(control_s,lk),
                  Group=c(rep("Control",length(control_s)),rep("LK",length(lk))),
-                 Site=c(control_site,lk_site),
-                 Story=c(control_story,lk_story))
+                 Site=c(as.character(control_site),as.character(lk_site)),
+                 Story=c(as.character(control_story),as.character(lk_story)))
 data3$Group=as.factor(data3$Group)
 data3$Site=as.factor(data3$Site)
 data3$Story=as.factor(data3$Story)
@@ -464,13 +457,12 @@ s3=lmBF(Stress ~ Group + Site + Story ,data3,whichRandom=c("site","story"))
 
 data4=data.frame(Stress=c(control_s,bs),
                  Group=c(rep("Control",length(control_s)),rep("BS",length(bs))),
-                 Site=c(control_site,bs_site),
-                 Story=c(control_story,bs_story))
+                 Site=c(as.character(control_site),as.character(bs_site)),
+                 Story=c(as.character(control_story),as.character(bs_story)))
 data4$Group=as.factor(data4$Group)
 data4$Site=as.factor(data4$Site)
 data4$Story=as.factor(data4$Story)
 s4=lmBF(Stress ~ Group + Site + Story ,data4,whichRandom=c("site","story"))
-
 
 # verify groups with (BF > 10 or BF < 0.1 or N > Nmax) 
 N_max=4800
@@ -487,11 +479,11 @@ if(("condition1mindfulwalking" %in% name)==T){
   
   D1=sam_emotional[sam_emotional$group == "condition5bookchapter" | sam_emotional$group == "condition1mindfulwalking",]
   t1=lmBF(sam1 ~ group +site+story,D1,whichRandom=c("site","story"))
-          
+  
   
   D2=sam_arousal[sam_arousal$group == "condition5bookchapter" | sam_arousal$group == "condition1mindfulwalking",]
   t1b=lmBF(sam2 ~ group +site+story,D2,whichRandom=c("site","story"))
-           
+  
   
   D3=sam_control[sam_control$group == "condition5bookchapter" | sam_control$group == "condition1mindfulwalking",]
   t1c=lmBF(sam3 ~ group +site+story,D3,whichRandom=c("site","story"))
@@ -569,29 +561,17 @@ if(is.na(t3)==F){Sam_emotional_BF[3]=extractBF(t3)$bf[1]} else Sam_emotional_BF[
 if(is.na(t4)==F){Sam_emotional_BF[4]=extractBF(t4)$bf[1]} else Sam_emotional_BF[4]==NA
 
 
-data=data.frame(Comparison,Stress_BF)
+data=data.frame(Comparison,Stress_BF, Sam_arousal_BF, Sam_control_BF, Sam_emotional_BF)
 data
 
-# creating a  dataset with stai_avg e ipip_avg group, site, story
-# left join with stai_avergae e ipip_average keeping the 4 extra variables (results)
-# testing the moderation of neuroticism
 
-results<-merge(x=Stai,y=ipip,by="responseid",all.x=TRUE)
-results=results[,c(1,2,3,4,26,27,53)]
-colnames(results)=c("responseid","group","site","story","Stai_average","Stai_median","ipip_average")
-results=results[(results$group %in% name == T),]
-
-# data collection tracker
 # check how many participants for each groups
 d1=as.data.frame(table(Df$group))
-colnames(d1)=c("Group","Subjects")
-
-
+colnames(d1)=c("Group","Participants")
 
 # check how many participants for site
 d2=as.data.frame(table(Df$site))
-colnames(d2)=c("Site","Subjects")
-
+colnames(d2)=c("Site","Participants")
 
 ```
 
@@ -602,12 +582,12 @@ colnames(d2)=c("Site","Subjects")
 ```{r warning=F, message=F,echo=F}
 
 d1  %>%
-    `colnames<-`(c("Site", "Subjects")) %>%
+    `colnames<-`(c("Site", "Participants")) %>%
   datatable(filter = "top", rownames = FALSE,
             options = list(columnDefs = list(list(className = 'dt-center', targets = 1:5))),
             caption = htmltools::tags$caption(
     style = 'caption-side: bottom; text-align: center;',
-    'Table 1: ', htmltools::em('Distribution of subjects by site')))
+    'Table 1: ', htmltools::em('Distribution of participants per site')))
 ```
 
 ## Participants for each site
@@ -615,12 +595,12 @@ d1  %>%
 ```{r warning=F, message=F,echo=F}
 
 d2  %>%
-    `colnames<-`(c("Site", "Subjects")) %>%
+    `colnames<-`(c("Site", "Participants")) %>%
   datatable(filter = "top", rownames = FALSE,
             options = list(columnDefs = list(list(className = 'dt-center', targets = 1:5))),
             caption = htmltools::tags$caption(
     style = 'caption-side: bottom; text-align: center;',
-    'Table 2: ', htmltools::em('Distribution of subjects by site')))
+    'Table 2: ', htmltools::em('Distribution of participants per site')))
 ```
 
 # Bayes Factor for STAI, Form Y (short-term efficacy span stress)

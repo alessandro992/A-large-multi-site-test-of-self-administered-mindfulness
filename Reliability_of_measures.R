@@ -37,7 +37,7 @@ summary(fit1f, fit.measures=T)
 
 #We Obtain coefficient omega as an estimate of the reliability of the ipip neuroticism scale
 reliability(fit1f)
-
+semTools::reliability(fit1f)
                    
 
 

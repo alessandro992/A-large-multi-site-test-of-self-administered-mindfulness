@@ -16,106 +16,17 @@ library(tidyr)
 
 set.seed(10)
 
-#We had a problem at a certain point of the data collection, when we changed the survey flow
-#because we had to close the allocation to a condition.This caused a loss of information as related 
-#to the group allocation for the previous participants. Fortunatly We downloaded the data just before doing 
-#the change and in this way we can transfer the information of the old dataset to the new  dataset
-#as related to the group allocation by matching the same responseid. This happened two times because we had to 
-#change the survey flow twice.
+#load the final dataset
 
-# Fix of the data after the 1st time we changed the survey flow
+Df <- read_csv2("finaldata.csv") 
 
-# Load raw csv file - call the dataset sam_multisite.csv to make the script work
-Df <- read_survey("olddata.csv") %>%
-  clean_names()
-
-old_groups <-
-  Df %>% 
-  select(responseid = response_id,
-         old_group = fl_13_do)
-
-# Adjust variables name
-names(Df) <- tolower(names(Df))
-Df <- Df %>% rename(responseid = response_id,
-                    site = user_language,
-                    group = fl_13_do,
-                    story=fl_123_do) 
-
-Df2 <- read_survey("middledata.csv") %>%
-  clean_names()
-
-names(Df2) <- tolower(names(Df2))
-Df2 <- Df2 %>% rename(responseid = response_id,
-                      site = user_language,
-                      group = fl_158_do,
-                      story= fl_123_do) 
-
-
-Df <- 
-  Df2 %>% 
-  left_join(old_groups, by = "responseid") %>% 
-  mutate(group = coalesce(group, old_group)) %>% 
-  select(-old_group)
-
-# Fix of the data after the 2nd time we changed the survey flow
-
-Df3 <- read_survey("test.csv") %>%
-  clean_names()
-
-old_groups <-
-  Df %>% 
-  select(responseid, 
-         old_group = group)
-
-names(Df3) <- tolower(names(Df3))
-Df3 <- Df3 %>% rename(responseid = response_id,
-                      site = user_language,
-                      group = fl_166_do,
-                      story= fl_123_do) 
-
-Df <- 
-  Df3 %>% 
-  left_join(old_groups, by = "responseid") %>% 
-  mutate(group = coalesce(group, old_group)) %>% 
-  select(-old_group)
-
-#Each time a group has been closed it loses its original name and a random code it is assigned to it, here
-#we are giving back the name corresponding to its condition
-
-#first closure of one group 4/3/2022 (mindful walking) 
-Df$group[Df$group == "BL_5axdKgbAbaOEiXA"] <- "condition1mindfulwalking"
-
-#second closure of two group 5/3/2022 (Loving kindness and body scan) 
-Df$group[Df$group == "BL_4HCNS9wf6EYigQe"] <- "condition3lovingkindness"
-Df$group[Df$group == "BL_cAzC094kCCPCDYO"] <- "condition4bodyscan"
-
-Df$site=as.character(Df$site)
-Df$site=tolower(Df$site)
-Df$site=trimws(Df$site, whitespace = "[\\h\\v\\t ]")
-Df$site=trimws(Df$site)
-Df$site=gsub(" ","",Df$site)
-Df$site=removePunctuation(Df$site)
-
-#some sites gave the generic link to participants, as a result of this we lost the info 
-#as related to their site. We recovered that info by looking at the answer that participants give
-#to the question "univ" 
-
-Df$univ=as.character(Df$univ)
-Df$univ=tolower(Df$univ)
-Df$univ=trimws(Df$univ, whitespace = "[\\h\\v\\t ]")
-Df$univ=trimws(Df$univ)
-Df$univ=gsub(" ","",Df$univ)
-Df$univ=removePunctuation(Df$univ)
-
-Df$site[Df$univ == "universityofsouthernindiana"] <- "indi"
-Df$site[Df$univ == "usi"] <- "indi"
-Df$site[Df$univ == "stolafcollege"] <- "olaf"
-Df$site[Df$univ == "universityofutah"] <- "utah"
-Df$site[Df$site == "en"] <- "utah"
-
-
-#Code to write the dataset (with information related to the allocation to groups of the old dataset)
-#write_csv2(Df,"~/Google Drive/R stuff/A-large-multi-site-test-of-self-administered-mindfulness/nameofthedata_recoveredgr_allocation.csv")
+#count participants that did not fit inclusion criteria
+#dfb <- Df %>% count(q110)
+#dfa <- Df %>% count(mental)
+#dfc <- Df %>% count(meditation_exp)
+#dfd <- Df %>% count(eng_level)
+#dfe <- Df %>% count(gender)
+#dff <- Df %>% count(student)
 
 # remove rows with missing RESPONSEID 
 Df <- Df[!(is.na(Df$responseid)==T),]
@@ -127,16 +38,12 @@ Df <- Df[!(is.na(Df$group)==T),]
 Df <- Df[Df$age != "999",]
 Df <- Df[Df$age != 999,]
 
-# remove rows with DURATION <946
-Df <- Df[Df$duration_in_seconds > 946,]
+# check observations for site overall (including careless respondents):
+d2=as.data.frame(table(Df$site))
+colnames(d2)=c("Site","Participants")
 
 # remove duplicates in RESPONSEID
 Df[!duplicated(Df$responseid),]
-
-#no need for this df anymore
-rm(Df2)
-rm(Df3)
-rm(old_groups)
 
 # remove individuals with 50% items responses missing
 Df2=Df %>% 
@@ -188,7 +95,11 @@ Df$site[is.na(Df$site)]="absent"
 Df$site=as.factor(Df$site)
 Df$story=as.factor(Df$story)
 
-
+#no need for these datasets anymore
+rm(d2)
+rm(Dd)
+rm(De)
+rm(Df2)
 
 # Creating different datasets from the csv file: ipip, stai,sam_arousal,
 # sam_control,sam_emotional,age,gender. For each scales we computed the sum, 
@@ -403,7 +314,6 @@ age <- Df %>%
          median = median(age),
          sd = sd(age))
 
-
 # group means for STAI_AVERAGE 
 Stai %>%
   group_by(group) %>%
@@ -599,13 +509,16 @@ if(is.na(t4)==F){Sam_emotional_BF[4]=extractBF(t4)$bf[1]} else Sam_emotional_BF[
 data=data.frame(Comparison,Stress_BF, Sam_arousal_BF, Sam_control_BF, Sam_emotional_BF)
 data
 
-# creating a  dataset with stai_avg e ipip_avg group, site, story
-# left join with stai_avergae e ipip_average keeping the 4 extra variables (results)
-# testing the moderation of neuroticism
 
+################################################################################
+# Non-confirmatory analyses########################################
+################################################################################
+
+#neuroticism
 results<-merge(x=Stai,y=ipip,by="responseid",all.x=TRUE)
-results=results[,c(1,2,3,4,26,53)]
-colnames(results)=c("responseid","group","site","story","Stai_average","ipip_average")
+results=results[,c(1,2,3,4,26,33,53)]
+colnames(results)=c("responseid","group","site","story","Stai_average","eng_level","ipip_average")
+
 
 full <- lmBF(Stai_average ~ group +
                ipip_average +
@@ -629,14 +542,167 @@ chainsFull <- posterior(full, iterations = 10000)
 summary(chainsFull[,1:7])
 
 
+#merging the groups to achieve more power
+
+results$G[results$group=="condition1mindfulwalking"]= "mindfulnessgroups"
+results$G[results$group=="condition2mindfulbreathing"]= "mindfulnessgroups"
+results$G[results$group=="condition3lovingkindness"]= "mindfulnessgroups"
+results$G[results$group=="condition4bodyscan"]= "mindfulnessgroups"
+results$G[results$group=="condition5bookchapter"]= "controlgroup"
+
+full <- lmBF(Stai_average ~ G +
+               ipip_average +
+               G:ipip_average +
+               site,
+             whichRandom=c("site","story"),
+             data=results)
+
+noInteraction <- lmBF(Stai_average ~ G +
+                        ipip_average +
+                        site,
+                      whichRandom=c("site","story"),
+                      data=results)
+
+allBFs <- c(full, noInteraction)
+allBFs
+
+full/noInteraction
+
+chainsFull <- posterior(full, iterations = 10000)
+summary(chainsFull[,1:7])
+
+#moderation for english level
+
+full <- lmBF(Stai_average ~ group +
+               eng_level +
+               group:eng_level +
+               site,
+             whichRandom=c("site","story"),
+             data=results)
+
+noInteraction <- lmBF(Stai_average ~ group +
+                        eng_level +
+                        site,
+                      whichRandom=c("site","story"),
+                      data=results)
+
+allBFs <- c(full, noInteraction)
+allBFs
+
+full/noInteraction
+
+chainsFull <- posterior(full, iterations = 10000)
+summary(chainsFull[,1:7])
+
+#merging the groups together to achieve more power
+
+table(Df$eng_level)
+
+full <- lmBF(Stai_average ~ G +
+               eng_level +
+               G:eng_level +
+               site,
+             whichRandom=c("site","story"),
+             data=results)
+
+noInteraction <- lmBF(Stai_average ~ G +
+                        eng_level +
+                        site,
+                      whichRandom=c("site","story"),
+                      data=results)
+
+allBFs <- c(full, noInteraction)
+allBFs
+
+full/noInteraction
+
+chainsFull <- posterior(full, iterations = 10000)
+summary(chainsFull[,1:7])
+
+################################################################################
+# Sequential bayesian graphs #
+################################################################################
+
+Stai=Stai[,c(1:4,26)]
+name=c("condition2mindfulbreathing","condition5bookchapter")
+Stai1=Stai[(Stai$group %in% name)==T,]
+colnames(Stai1)=c("responseid","Group","Site","Story","Stress")
+BF=c()
+x=seq(0,890,10)
+for (i in 1:length(x)){
+  data=Stai1[1:(10+x[i]),]
+  s=lmBF(Stress ~ Group + Site + Story ,data,whichRandom=c("site","story"))
+  BF[i]=s@bayesFactor$bf
+}
+v=x+10
+dat=data.frame(BF,v)
+ggplot(data=dat, aes(x=v, y=BF)) +
+  geom_line()+
+  labs(x="Sample size",y="log(Bayes Factor)",title="Control vs MB")
+
+
+Stai=Stai[,c(1:4,26)]
+name=c("condition1mindfulwalking","condition5bookchapter")
+Stai1=Stai[(Stai$group %in% name)==T,]
+colnames(Stai1)=c("responseid","Group","Site","Story","Stress")
+BF=c()
+x=seq(0,830,10)
+for (i in 1:length(x)){
+  data=Stai1[1:(10+x[i]),]
+  s=lmBF(Stress ~ Group + Site + Story ,data,whichRandom=c("site","story"))
+  BF[i]=s@bayesFactor$bf
+}
+v=x+10
+dat=data.frame(BF,v)
+ggplot(data=dat, aes(x=v, y=BF)) +
+  geom_line()+
+  labs(x="Sample size",y="log(Bayes Factor)",title="Control vs MW")
+
+
+Stai=Stai[,c(1:4,26)]
+name=c("condition3lovingkindness","condition5bookchapter")
+Stai1=Stai[(Stai$group %in% name)==T,]
+colnames(Stai1)=c("responseid","Group","Site","Story","Stress")
+BF=c()
+x=seq(0,840,10)
+for (i in 1:length(x)){
+  data=Stai1[1:(10+x[i]),]
+  s=lmBF(Stress ~ Group + Site + Story ,data,whichRandom=c("site","story"))
+  BF[i]=s@bayesFactor$bf
+}
+v=x+10
+dat=data.frame(BF,v)
+ggplot(data=dat, aes(x=v, y=BF)) +
+  geom_line()+
+  labs(x="Sample size",y="log(Bayes Factor)",title="Control vs LK")
+
+Stai=Stai[,c(1:4,26)]
+name=c("condition4bodyscan","condition5bookchapter")
+Stai1=Stai[(Stai$group %in% name)==T,]
+colnames(Stai1)=c("responseid","Group","Site","Story","Stress")
+BF=c()
+x=seq(0,870,10)
+for (i in 1:length(x)){
+  data=Stai1[1:(10+x[i]),]
+  s=lmBF(Stress ~ Group + Site + Story ,data,whichRandom=c("site","story"))
+  BF[i]=s@bayesFactor$bf
+}
+v=x+10
+dat=data.frame(BF,v)
+ggplot(data=dat, aes(x=v, y=BF)) +
+  geom_line()+
+  labs(x="Sample size",y="log(Bayes Factor)",title="Control vs BS")
+
+#Following some lines of codes that can be useful 
+
 # data collection tracker
 # check how many participants for each groups
-d1=as.data.frame(table(Df$group))
-colnames(d1)=c("Group","Participants")
-d1
+#d1=as.data.frame(table(Df$group))
+#colnames(d1)=c("Group","Participants")
 
 # check how many participants for site
-d2=as.data.frame(table(Df$site))
-colnames(d2)=c("Site","Participants")
-d2
+#d2=as.data.frame(table(Df$site))
+#colnames(d2)=c("Site","Participants")
 
+#use the following row to see Bayes Factor as scientific notation
+#format(3.440854e-05, scientific = FALSE)
