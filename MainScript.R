@@ -635,10 +635,15 @@ for (i in 1:length(x)){
   BF[i]=s@bayesFactor$bf
 }
 v=x+10
-dat=data.frame(BF,v)
-ggplot(data=dat, aes(x=v, y=BF)) +
+
+BFF=exp(BF) 
+bf=log10(BFF)
+dat=data.frame(bf,v)
+ggplot(data=dat, aes(x=v, y=bf)) +
   geom_line()+
-  labs(x="Sample size",y="log(Bayes Factor)",title="Control vs MB")
+  geom_hline(yintercept=1, color = "red", size=0.5) +
+  geom_hline(yintercept=-1, color = "red", size=0.5) +
+  labs(x="Sample size",y="log10(Bayes Factor)",title="Control vs Mindful Breathing")
 
 
 Stai=Stai[,c(1:4,26)]
@@ -653,10 +658,15 @@ for (i in 1:length(x)){
   BF[i]=s@bayesFactor$bf
 }
 v=x+10
-dat=data.frame(BF,v)
-ggplot(data=dat, aes(x=v, y=BF)) +
+
+BFF=exp(BF) 
+bf=log10(BFF) 
+dat=data.frame(bf,v)
+ggplot(data=dat, aes(x=v, y=bf)) +
   geom_line()+
-  labs(x="Sample size",y="log(Bayes Factor)",title="Control vs MW")
+  geom_hline(yintercept=1, color = "red", size=0.5) +
+  geom_hline(yintercept=-1, color = "red", size=0.5) +
+  labs(x="Sample size",y="log10(Bayes Factor)",title="Control vs Mindful Walking")
 
 
 Stai=Stai[,c(1:4,26)]
@@ -671,10 +681,16 @@ for (i in 1:length(x)){
   BF[i]=s@bayesFactor$bf
 }
 v=x+10
-dat=data.frame(BF,v)
-ggplot(data=dat, aes(x=v, y=BF)) +
+
+BFF=exp(BF) 
+bf=log10(BFF) 
+dat=data.frame(bf,v)
+ggplot(data=dat, aes(x=v, y=bf)) +
   geom_line()+
-  labs(x="Sample size",y="log(Bayes Factor)",title="Control vs LK")
+  geom_hline(yintercept=1, color = "red", size=0.5) +
+  geom_hline(yintercept=-1, color = "red", size=0.5) +
+  labs(x="Sample size",y="log10(Bayes Factor)",title="Control vs Loving-Kindness")
+
 
 Stai=Stai[,c(1:4,26)]
 name=c("condition4bodyscan","condition5bookchapter")
@@ -688,10 +704,16 @@ for (i in 1:length(x)){
   BF[i]=s@bayesFactor$bf
 }
 v=x+10
-dat=data.frame(BF,v)
-ggplot(data=dat, aes(x=v, y=BF)) +
+
+BFF=exp(BF) 
+bf=log10(BFF) 
+dat=data.frame(bf,v)
+ggplot(data=dat, aes(x=v, y=bf)) +
   geom_line()+
-  labs(x="Sample size",y="log(Bayes Factor)",title="Control vs BS")
+  geom_hline(yintercept=1, color = "red", size=0.5) +
+  geom_hline(yintercept=-1, color = "red", size=0.5) +
+  labs(x="Sample size",y="log10(Bayes Factor)",title="Control vs Body Scan")
+
 
 #Following some lines of codes that can be useful 
 
