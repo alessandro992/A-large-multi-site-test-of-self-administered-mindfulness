@@ -579,8 +579,11 @@ m_smd <- rma.uni(yi = Es_Bodyscan,
                  data = Bodyscan)
 
 summary(m_smd)
-forest(m_smd,
-       slab = Bodyscan$Site)
+forest(m_smd, slab = Bodyscan$Site)
+
+svg(file='forestBS.svg')
+forest(m_smd, slab = Bodyscan$Site)
+dev.off()
 
 #rename condition groups
 ff11 <- ff11 %>%
@@ -674,8 +677,11 @@ m_smd <- rma.uni(yi = Es_lovingkindness,
                  data = Lovingkindness)
 
 summary(m_smd)
-forest(m_smd,
-       slab = Lovingkindness$Site)
+
+forest(m_smd, slab = Lovingkindness$Site)
+svg(file='forestLK.svg')
+forest(m_smd, slab = Lovingkindness$Site)
+dev.off()
 
 filtered_data <- ff22 %>% 
   filter(Group %in% c("Loving Kindness", "Control"))
@@ -793,8 +799,12 @@ m_smd <- rma.uni(yi = Es_mindfulbreathing ,
                  data = Mindfulbreathing)
 
 summary(m_smd)
-forest(m_smd,
-       slab = Mindfulbreathing$Site)
+forest(m_smd, slab = Mindfulbreathing$Site)
+
+svg(file='forestMB.svg')
+forest(m_smd, slab = Mindfulbreathing$Site)
+dev.off()
+
 
 #Mindful Walking----------------------------------------------------------------
 
@@ -864,20 +874,18 @@ m_smd <- rma.uni(yi = Es_mindfulwalking ,
                  vi = Se_mindfulwalking ,
                  data = Mindfulwalking)
 
-
-
 summary(m_smd)
-forest(m_smd,
-       slab = Mindfulwalking$Site)
+forest(m_smd, slab = Mindfulwalking$Site)
 
+svg(file='forestMW.svg')
+forest(m_smd, slab = Mindfulwalking$Site)
+dev.off()
 
-
-Non-confirmatory analyses-------------------------------------------------------
-
+# Non-confirmatory analyses-------------------------------------------------------
 
 #neuroticism
 results<-merge(x=Stai,y=ipip,by="responseid",all.x=TRUE)
-results=results[,c(1,2,3,4,27,5,55)]
+results=results[,c(1,2,3,4,27,5,55),]
 colnames(results)=c("responseid","group","site","story","Stai_average","eng_level","ipip_average")
 
 full <- lmBF(Stai_average ~ group +
@@ -1080,3 +1088,4 @@ ggplot(data=dat, aes(x=v, y=bf)) +
 
 #use the following row to see Bayes Factor as scientific notation
 #format(3.440854e-05, scientific = FALSE)
+
