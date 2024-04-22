@@ -13,12 +13,13 @@ library(psych)
 library(MBESS)
 library(tm)
 library(tidyr)
+library(metafor)
 
 set.seed(10)
 
 #load the final dataset
 
-Df <- read_csv2("finaldata.csv") 
+Df <- read_csv2("finaldata.csv")
 
 #count participants that did not fit inclusion criteria
 #dfb <- Df %>% count(q110)
@@ -28,7 +29,7 @@ Df <- read_csv2("finaldata.csv")
 #dfe <- Df %>% count(gender)
 #dff <- Df %>% count(student)
 
-# remove rows with missing RESPONSEID 
+# remove rows with missing RESPONSEID
 Df <- Df[!(is.na(Df$responseid)==T),]
 
 # remove rows with missing GROUP
@@ -46,7 +47,7 @@ colnames(d2)=c("Site","Participants")
 Df[!duplicated(Df$responseid),]
 
 # remove individuals with 50% items responses missing
-Df2=Df %>% 
+Df2=Df %>%
   select(starts_with("ipip"),starts_with("stai"))
 Df2$check=rowSums(is.na(Df2))/40
 check=Df2$check
@@ -54,9 +55,9 @@ Df=cbind(Df,check)
 Df=Df[Df$check < 0.5,]
 
 # remove individuals with 10 or more consecutive equal responses in ipip or stai items
-Dd=Df %>% 
+Dd=Df %>%
   select(starts_with("ipip"))
-De=Df %>% 
+De=Df %>%
   select(starts_with("stai"))
 CK=c()
 CH=c()
@@ -71,7 +72,7 @@ for (i in 1:nrow(De)){
 Df=cbind(Df,CH,CK)
 Df=Df[Df$CH==0 & Df$CK==0,]
 
-# Cleaning of group and story 
+# Cleaning of group and story
 Df$group=as.character(Df$group)
 Df$group=tolower(Df$group)
 Df$group=trimws(Df$group, whitespace = "[\\h\\v\\t ]")
@@ -102,17 +103,18 @@ rm(De)
 rm(Df2)
 
 # Creating different datasets from the csv file: ipip, stai,sam_arousal,
-# sam_control,sam_emotional,age,gender. For each scales we computed the sum, 
+# sam_control,sam_emotional,age,gender. For each scales we computed the sum,
 # the means, the median and SDs.
 
-ipip <- Df %>% 
-  select(responseid, group, starts_with("ipip"),site,story) 
+ipip <- Df %>%
+  select(responseid, group, starts_with("ipip"),site,story, eng_level)
 
-ipip <- ipip %>% 
+ipip <- ipip %>%
   transmute(responseid = responseid,
             group = group,
             site = site,
             story=story,
+            eng_level=eng_level,
             ipip1 = ipip1,
             ipip2 = ipip2,
             ipip3 = ipip3,
@@ -167,7 +169,7 @@ ipip$ipip_median <- apply(cbind(ipip$ipip1,
                                 ipip$ipip9,
                                 ipip$ipip10,
                                 ipip$ipip11_r,
-                                ipip$ipip12_r,  
+                                ipip$ipip12_r,
                                 ipip$ipip13_r,
                                 ipip$ipip14_r,
                                 ipip$ipip15_r,
@@ -199,14 +201,15 @@ ipip$ipip_sd <- apply(cbind(ipip$ipip1,
                             ipip$ipip20_r),1,sd, na.rm = TRUE)
 
 
-Stai <- Df %>% 
-  select(responseid, group, starts_with("Stai"),site,story) 
+Stai <- Df %>%
+  select(responseid, group, starts_with("Stai"),site,story,eng_level)
 
-Stai <- Stai %>% 
+Stai <- Stai %>%
   transmute(responseid = responseid,
             group = group,
             site = site,
             story=story,
+            eng_level=eng_level,
             Stai1_r = 5 - stai1,
             Stai2_r = 5 - stai2,
             Stai3 = stai3,
@@ -233,7 +236,7 @@ Stai$Stai_average <- rowMeans(cbind(Stai$Stai1_r,
                                     Stai$Stai2_r,
                                     Stai$Stai3,
                                     Stai$Stai4,
-                                    Stai$Stai5_r,        
+                                    Stai$Stai5_r,
                                     Stai$Stai6,
                                     Stai$Stai7,
                                     Stai$Stai8_r,
@@ -254,7 +257,7 @@ Stai$Stai_median <- apply(cbind(Stai$Stai1_r,
                                 Stai$Stai2_r,
                                 Stai$Stai3,
                                 Stai$Stai4,
-                                Stai$Stai5_r,                                    
+                                Stai$Stai5_r,
                                 Stai$Stai6,
                                 Stai$Stai7,
                                 Stai$Stai8_r,
@@ -292,16 +295,16 @@ Stai$Stai_sd <- apply(cbind(Stai$Stai1_r,
                             Stai$Stai19_r,
                             Stai$Stai20_r),1,sd, na.rm = TRUE)
 
-sam_emotional <- Df %>% 
-  select(responseid, group,site,story, starts_with("Sam1")) 
+sam_emotional <- Df %>%
+  select(responseid, group,site,story, starts_with("Sam1"))
 sam_emotional=na.omit(sam_emotional)
 
-sam_arousal <- Df %>% 
-  select(responseid, group,site,story, starts_with("Sam2")) 
+sam_arousal <- Df %>%
+  select(responseid, group,site,story, starts_with("Sam2"))
 sam_arousal=na.omit(sam_arousal)
 
-sam_control <- Df %>% 
-  select(responseid, group,site, story, starts_with("Sam3")) 
+sam_control <- Df %>%
+  select(responseid, group,site, story, starts_with("Sam3"))
 sam_control=na.omit(sam_control)
 
 gender <- Df %>%
@@ -314,7 +317,7 @@ age <- Df %>%
          median = median(age),
          sd = sd(age))
 
-# group means for STAI_AVERAGE 
+# group means for STAI_AVERAGE
 Stai %>%
   group_by(group) %>%
   summarise_at(vars(Stai_average), list(name = mean))
@@ -323,14 +326,14 @@ Stai %>%
 # selecting scores STAI for each group if n > 100 otherwise it will be a Nas
 n=100
 
-c5=filter(Stai, group == "condition5bookchapter" ) 
+c5=filter(Stai, group == "condition5bookchapter" )
 if(nrow(c5) < n){
   control_s=NA
 }  else if (nrow(c5) >= n) {
   control_s=c5$Stai_average
   control_story=c5$story
   control_site=c5$site
-} 
+}
 
 c4=filter(Stai, group == "condition4bodyscan" )
 if(nrow(c4) < n){
@@ -339,7 +342,7 @@ if(nrow(c4) < n){
   bs=c4$Stai_average
   bs_story=c4$story
   bs_site=c4$site
-} 
+}
 
 c3=filter(Stai, group == "condition3lovingkindness" )
 if(nrow(c3) < n){
@@ -348,16 +351,16 @@ if(nrow(c3) < n){
   lk=c3$Stai_average
   lk_story=c3$story
   lk_site=c3$site
-} 
+}
 
-c1=filter(Stai, group == "condition1mindfulwalking" ) 
+c1=filter(Stai, group == "condition1mindfulwalking" )
 if(nrow(c1) < n){
   mw=NA
 }  else if (nrow(c1) >= n) {
   mw=c1$Stai_average
   mw_story=c1$story
   mw_site=c1$site
-} 
+}
 
 c2=filter(Stai, group == "condition2mindfulbreathing" )
 if(nrow(c2)<n){
@@ -366,7 +369,7 @@ if(nrow(c2)<n){
   mb=c2$Stai_average
   mb_story=c2$story
   mb_site=c2$site
-} 
+}
 
 
 # computing the lmBF function for each experimental condition and the control group with sites and story as random factor for STAI
@@ -409,7 +412,7 @@ data4$Site=as.factor(data4$Site)
 data4$Story=as.factor(data4$Story)
 s4=lmBF(Stress ~ Group + Site + Story ,data4,whichRandom=c("site","story"))
 
-# verify groups with (BF > 10 or BF < 0.1 or N > Nmax) 
+# verify groups with (BF > 10 or BF < 0.1 or N > Nmax)
 N_max=4800
 groups=c("condition1mindfulwalking","condition2mindfulbreathing",
          "condition3lovingkindness","condition4bodyscan",
@@ -421,61 +424,61 @@ name=data[data$value>10 | data$value < 0.10 | Size>=N_max  ,"groups"]
 
 # computing the lmBF function for each experimental condition and the control group with sites and story as random factor for SAM
 if(("condition1mindfulwalking" %in% name)==T){
-  
+
   D1=sam_emotional[sam_emotional$group == "condition5bookchapter" | sam_emotional$group == "condition1mindfulwalking",]
   t1=lmBF(sam1 ~ group +site+story,D1,whichRandom=c("site","story"))
-  
-  
+
+
   D2=sam_arousal[sam_arousal$group == "condition5bookchapter" | sam_arousal$group == "condition1mindfulwalking",]
   t1b=lmBF(sam2 ~ group +site+story,D2,whichRandom=c("site","story"))
-  
-  
+
+
   D3=sam_control[sam_control$group == "condition5bookchapter" | sam_control$group == "condition1mindfulwalking",]
   t1c=lmBF(sam3 ~ group +site+story,D3,whichRandom=c("site","story"))
-  
+
 }  else
   t1=t1b=t1c=NA
 
 if(("condition2mindfulbreathing" %in% name)==T){
-  
+
   D1=sam_emotional[sam_emotional$group == "condition5bookchapter" | sam_emotional$group == "condition2mindfulbreathing",]
   t2=lmBF(sam1 ~ group +site+story,D1,whichRandom=c("site","story"))
-  
+
   D2=sam_arousal[sam_arousal$group == "condition5bookchapter" | sam_arousal$group == "condition2mindfulbreathing",]
   t2b=lmBF(sam2 ~ group +site+story,D2,whichRandom=c("site","story"))
-  
+
   D3=sam_control[sam_control$group == "condition5bookchapter" | sam_control$group == "condition2mindfulbreathing",]
   t2c=lmBF(sam3 ~ group +site+story,D3,whichRandom=c("site","story"))
-  
-  
+
+
 }  else
   t2=t2b=t2c=NA
 
 if(("condition3lovingkindness" %in% name)==T){
-  
+
   D1=sam_emotional[sam_emotional$group == "condition5bookchapter" | sam_emotional$group == "condition3lovingkindness",]
   t3=lmBF(sam1 ~ group +site+story,D1,whichRandom=c("site","story"))
-  
+
   D2=sam_arousal[sam_arousal$group == "condition5bookchapter" | sam_arousal$group == "condition3lovingkindness",]
   t3b=lmBF(sam2 ~ group +site+story,D2,whichRandom=c("site","story"))
-  
+
   D3=sam_control[sam_control$group == "condition5bookchapter" | sam_control$group == "condition3lovingkindness",]
   t3c=lmBF(sam3 ~ group +site+story,D3,whichRandom=c("site","story"))
-  
+
 }  else
   t3=t3b=t3c=NA
 
 if(("condition4bodyscan" %in% name)==T){
-  
+
   D1=sam_emotional[sam_emotional$group == "condition5bookchapter" | sam_emotional$group == "condition4bodyscan",]
   t4=lmBF(sam1 ~ group +site+story,D1,whichRandom=c("site","story"))
-  
+
   D2=sam_arousal[sam_arousal$group == "condition5bookchapter" | sam_arousal$group == "condition4bodyscan",]
   t4b=lmBF(sam2 ~ group +site+story,D2,whichRandom=c("site","story"))
-  
+
   D3=sam_control[sam_control$group == "condition5bookchapter" | sam_control$group == "condition4bodyscan",]
   t4c=lmBF(sam3 ~ group +site+story,D3,whichRandom=c("site","story"))
-  
+
 }  else
   t4=t4b=t4c=NA
 
@@ -505,20 +508,377 @@ if(is.na(t2)==F){Sam_emotional_BF[2]=extractBF(t2)$bf[1]} else Sam_emotional_BF[
 if(is.na(t3)==F){Sam_emotional_BF[3]=extractBF(t3)$bf[1]} else Sam_emotional_BF[3]==NA
 if(is.na(t4)==F){Sam_emotional_BF[4]=extractBF(t4)$bf[1]} else Sam_emotional_BF[4]==NA
 
-
 data=data.frame(Comparison,Stress_BF, Sam_arousal_BF, Sam_control_BF, Sam_emotional_BF)
 data
 
+# Plots -------------------------------------------------------------------
 
-################################################################################
-# Non-confirmatory analyses########################################
-################################################################################
+
+# saving row means of the groups
+f=aggregate(Stai$Stai_average, list(Stai$group), mean)
+Mean_control=f[5,2]
+Mean_BS=f[4,2]
+Mean_LK=f[3,2]
+Mean_MB=f[2,2]
+Mean_MW=f[1,2]
+
+# saving sd of the groups
+f2=aggregate(Stai$Stai_average, list(Stai$group), sd)
+Sd_control=f2[5,2]
+Sd_BS=f2[4,2]
+Sd_LK=f2[3,2]
+Sd_MB=f2[2,2]
+Sd_MW=f2[1,2]
+
+ff=cbind(f,f2)
+ff=ff[,-3]
+colnames(ff)=c("gruppo","mean","sd")
+#ff
+
+f=aggregate(Stai$Stai_average, list(Stai$site,Stai$group), mean,na.rm=T)
+f2=aggregate(Stai$Stai_average, list(Stai$site,Stai$group), sd,na.rm=T)
+ffx=cbind(f,f2)
+ffx=ffx[,-c(4,5)]
+colnames(ffx)=c("Site","Group","Mean","Sd")
+#Next line of code is just if you run this analysis with all the sites
+#ffx=ffx[-c(4,21,22,37,54,55,70,87,88,89,92,106,123,124,125,135,141,158),]
+
+ffx %>%
+  ggplot(aes(x=Mean, y=Site,size=Sd,col=Group)) +
+  geom_point(alpha=0.5) +
+  scale_size(range = c(.1, 6), name="Standard Deviation")+
+  labs(title="means and standard deviations of all test conditions")
+
+
+#Body Scan-------------------------------------------------------------------
+
+St=Stai[Stai$group=="condition5bookchapter"|Stai$group=="condition4bodyscan",]
+f=aggregate(St$Stai_average, list(St$site,St$group), mean,na.rm=T)
+f2=aggregate(St$Stai_average, list(St$site,St$group), sd,na.rm=T)
+
+ff1=cbind(f,f2)
+ff1=ff1[,-c(4,5)]
+colnames(ff1)=c("Site","Group","Mean","Sd")
+gg=as.data.frame(table(St$site,St$group))
+colnames(gg)=c("Site","Group","Freq")
+ff11=merge(x=ff1,y=gg,by=c("Site","Group"))
+#ff11
+
+#Forest plot and test of heterogeneity for body scan vs control
+
+Bookchapter <- ff11 %>% filter (Group == "condition5bookchapter")
+Bodyscan <- ff11 %>% filter (Group == "condition4bodyscan")
+Bodyscan = Bodyscan [-c(4,34),]
+
+
+#Bodyscan <- escalc(measure = "SMD", m1i = Bookchapter$Mean, m2i = Bodyscan$Mean, sd1i = Bookchapter$Sd, sd2i = Bodyscan$Sd, n1i = Bookchapter$Freq, n2i = Bodyscan$Freq, var.names = c("Es_Bodyscan", "Se_Bodyscan"), data = Bodyscan)
+Bodyscan <- escalc(measure = "SMD", m1i = Bodyscan$Mean, m2i = Bookchapter$Mean, sd1i = Bodyscan$Sd, sd2i = Bookchapter$Sd, n1i = Bodyscan$Freq, n2i = Bookchapter$Freq, var.names = c("Es_Bodyscan", "Se_Bodyscan"), data = Bodyscan)
+
+m_smd <- rma.uni(yi = Es_Bodyscan,
+                 vi = Se_Bodyscan,
+                 data = Bodyscan)
+
+summary(m_smd)
+forest(m_smd,
+       slab = Bodyscan$Site)
+
+#rename condition groups
+ff11 <- ff11 %>%
+  mutate(Group = case_when(
+    Group == "condition5bookchapter" ~ "Control",
+    Group == "condition4bodyscan" ~ "Body Scan",
+    Group == "condition3lovingkindness" ~ "Loving Kindness",
+    Group == "condition2mindfulbreathing" ~ "Mindful Breathing",
+    Group == "condition1mindfulwalking" ~ "Mindful Walking",
+    TRUE ~ Group  
+  ))
+
+ff11 %>%
+  ggplot(aes(x=Mean, y=Site,size=Sd,col=Group)) +
+  geom_point(alpha=0.5) +
+  scale_size(range = c(.1, 9), name="Standard Deviation")+
+  labs(title="Control vs Body Scan")
+
+filtered_data <- ff11 %>% 
+  filter(Group %in% c("Body Scan", "Control"))
+
+# Define a color palette that is accessible to colorblind readers
+color_palette <- c("#1F77B4", "#FF7F0E") # Blue and orange colors
+
+filtered_data <- filtered_data %>%
+  mutate(Site = factor(Site, levels = rev(sort(unique(Site)))))
+
+# Plotting
+filtered_data %>%
+  ggplot(aes(x = Mean, y = Site, size = Sd, col = Group)) +
+  geom_point(alpha = 0.5) +
+  scale_size(range = c(0.1, 6), name = "Standard Deviation") +
+  scale_color_manual(values = color_palette) +  # Set the color palette manually
+  labs(title = "Body Scan vs Control") +
+  theme_minimal()  # Adjust the theme if necessary for better readability
+
+# Plotting
+p <- filtered_data %>%
+  ggplot(aes(x = Mean, y = Site, size = Sd, col = Group)) +
+  geom_point() +  # Removed alpha transparency
+  scale_size(range = c(0.1, 6), name = "Standard Deviation") +
+  scale_color_manual(values = color_palette) +  # Set the color palette manually
+  labs(title = "Body Scan vs Control") +
+  theme_minimal()  # Adjust the theme if necessary for better readability
+
+# Saving the plot as EPS file
+ggsave(filename = "BodyScanp.eps", plot = p,
+       width = 6, height = 4, units = "in", dpi = 300, device = "eps")
+
+
+#Loving Kindness----------------------------------------------------------------
+  
+St=Stai[Stai$group=="condition5bookchapter"|Stai$group=="condition3lovingkindness",]
+f=aggregate(St$Stai_average, list(St$site,St$group), mean)
+f2=aggregate(St$Stai_average, list(St$site,St$group), sd)
+
+ff2=cbind(f,f2)
+ff2=ff2[,-c(4,5)]
+colnames(ff2)=c("Site","Group","Mean","Sd")
+gg=as.data.frame(table(St$site,St$group))
+colnames(gg)=c("Site","Group","Freq")
+ff22=merge(x=ff2,y=gg,by=c("Site","Group"))
+ff22
+
+#rename condition groups
+ff22 <- ff22 %>%
+  mutate(Group = case_when(
+    Group == "condition5bookchapter" ~ "Control",
+    Group == "condition4bodyscan" ~ "Body Scan",
+    Group == "condition3lovingkindness" ~ "Loving Kindness",
+    Group == "condition2mindfulbreathing" ~ "Mindful Breathing",
+    Group == "condition1mindfulwalking" ~ "Mindful Walking",
+    TRUE ~ Group  # Mantieni gli altri valori invariati
+  ))
+
+
+#Forest plot and test of heterogeneity for Loving-kindness vs control
+
+Bookchapter <- ff11 %>% filter (Group == "Control")
+Lovingkindness <- ff22 %>% filter (Group == "Loving Kindness")
+
+Lovingkindness = Lovingkindness [-c(26),]
+
+
+#Lovingkindness <- escalc(measure = "SMD", m1i = Bookchapter$Mean, m2i = Lovingkindness$Mean, sd1i = Bookchapter$Sd, sd2i = Lovingkindness$Sd, n1i = Bookchapter$Freq, n2i = Lovingkindness$Freq, var.names = c("Es_lovingkindness", "Se_lovingkindness"), data = Lovingkindness)
+Lovingkindness <- escalc(measure = "SMD", m1i = Lovingkindness$Mean, m2i = Bookchapter$Mean, sd1i = Lovingkindness$Sd, sd2i = Bookchapter$Sd, n1i = Lovingkindness$Freq, n2i = Bookchapter$Freq, var.names = c("Es_lovingkindness", "Se_lovingkindness"), data = Lovingkindness)
+
+
+m_smd <- rma.uni(yi = Es_lovingkindness,
+                 vi = Se_lovingkindness,
+                 data = Lovingkindness)
+
+summary(m_smd)
+forest(m_smd,
+       slab = Lovingkindness$Site)
+
+filtered_data <- ff22 %>% 
+  filter(Group %in% c("Loving Kindness", "Control"))
+
+ff22 %>%
+  ggplot(aes(x=Mean, y=Site,size=Sd,col=Group)) +
+  geom_point(alpha=0.5) +
+  scale_size(range = c(.1, 9), name="Standard Deviation")+
+  labs(title="Control vs Loving-Kindness")
+
+# Define a color palette that is accessible to colorblind readers
+color_palette <- c("#FF7F0E", "#1F77B4") # Blue and orange colors
+
+filtered_data <- filtered_data %>%
+  mutate(Site = factor(Site, levels = rev(sort(unique(Site)))))
+
+# Plotting
+filtered_data %>%
+  ggplot(aes(x = Mean, y = Site, size = Sd, col = Group)) +
+  geom_point(alpha = 0.5) +
+  scale_size(range = c(0.1, 6), name = "Standard Deviation") +
+  scale_color_manual(values = color_palette) +  # Set the color palette manually
+  labs(title = "Control vs Loving Kindness") +
+  theme_minimal()  # Adjust the theme if necessary for better readability
+
+# Plotting
+p <- filtered_data %>%
+  ggplot(aes(x = Mean, y = Site, size = Sd, col = Group)) +
+  geom_point() +  # Removed alpha transparency
+  scale_size(range = c(0.1, 6), name = "Standard Deviation") +
+  scale_color_manual(values = color_palette) +  # Set the color palette manually
+  labs(title = "Loving Kindness vs Control") +
+  theme_minimal()  # Adjust the theme if necessary for better readability
+
+# Saving the plot as EPS file
+ggsave(filename = "LovingKindness.eps", plot = p,
+       width = 6, height = 4, units = "in", dpi = 300, device = "eps")
+
+
+#Mindful Breathing--------------------------------------------------------------
+
+
+St=Stai[Stai$group=="condition5bookchapter"|Stai$group=="condition2mindfulbreathing",]
+f=aggregate(St$Stai_average, list(St$site,St$group), mean)
+f2=aggregate(St$Stai_average, list(St$site,St$group), sd)
+
+ff3=cbind(f,f2)
+ff3=ff3[,-c(4,5)]
+colnames(ff3)=c("Site","Group","Mean","Sd")
+gg=as.data.frame(table(St$site,St$group))
+colnames(gg)=c("Site","Group","Freq")
+ff33=merge(x=ff3,y=gg,by=c("Site","Group"))
+ff33
+
+ff33=ff33[-c(7,8,41,42,43),]
+
+#rename condition groups
+ff33 <- ff33 %>%
+  mutate(Group = case_when(
+    Group == "condition5bookchapter" ~ "Control",
+    Group == "condition4bodyscan" ~ "Body Scan",
+    Group == "condition3lovingkindness" ~ "Loving Kindness",
+    Group == "condition2mindfulbreathing" ~ "Mindful Breathing",
+    Group == "condition1mindfulwalking" ~ "Mindful Walking",
+    TRUE ~ Group  # 
+  ))
+
+ff33 %>%
+  ggplot(aes(x=Mean, y=Site,size=Sd,col=Group)) +
+  geom_point(alpha=0.5) +
+  scale_size(range = c(.1, 9), name="Standard Deviation")+
+  labs(title="Control vs Mindful Breathing")
+
+filtered_data <- ff33 %>% 
+  filter(Group %in% c("Mindful Breathing", "Control"))
+
+# Define a color palette that is accessible to colorblind readers
+color_palette <- c("#FF7F0E", "#1F77B4") # Blue and orange colors
+
+filtered_data <- filtered_data %>%
+  mutate(Site = factor(Site, levels = rev(sort(unique(Site)))))
+
+# Plotting
+filtered_data %>%
+  ggplot(aes(x = Mean, y = Site, size = Sd, col = Group)) +
+  geom_point(alpha = 0.5) +
+  scale_size(range = c(0.1, 6), name = "Standard Deviation") +
+  scale_color_manual(values = color_palette) +  # Set the color palette manually
+  labs(title = "Control vs Mindful Breathing") +
+  theme_minimal()  # Adjust the theme if necessary for better readability
+
+# Plotting
+p <- filtered_data %>%
+  ggplot(aes(x = Mean, y = Site, size = Sd, col = Group)) +
+  geom_point() +  # Removed alpha transparency
+  scale_size(range = c(0.1, 6), name = "Standard Deviation") +
+  scale_color_manual(values = color_palette) +  # Set the color palette manually
+  labs(title = "Mindful Breathing vs Control") +
+  theme_minimal()  # Adjust the theme if necessary for better readability
+
+# Saving the plot as EPS file
+ggsave(filename = "MindulBreathing.eps", plot = p,
+       width = 6, height = 4, units = "in", dpi = 300, device = "eps")
+
+#Forest plot and test of heterogeneity for mindful breathing vs control
+
+Bookchapter <- ff33 %>% filter (Group == "Control")
+Mindfulbreathing <- ff33 %>% filter (Group == "Mindful Breathing")
+
+#Mindfulbreathing <- escalc(measure = "SMD", m1i = Bookchapter$Mean, m2i = Mindfulbreathing$Mean, sd1i = Bookchapter$Sd, sd2i = Mindfulbreathing$Sd, n1i = Bookchapter$Freq, n2i = Mindfulbreathing$Freq, var.names = c("Es_mindfulbreathing", "Se_mindfulbreathing"), data = Mindfulbreathing)
+Mindfulbreathing <- escalc(measure = "SMD", m1i = Mindfulbreathing$Mean, m2i = Bookchapter$Mean, sd1i = Mindfulbreathing$Sd, sd2i = Bookchapter$Sd, n1i = Mindfulbreathing$Freq, n2i = Bookchapter$Freq, var.names = c("Es_mindfulbreathing", "Se_mindfulbreathing"), data = Mindfulbreathing)
+
+m_smd <- rma.uni(yi = Es_mindfulbreathing ,
+                 vi = Se_mindfulbreathing ,
+                 data = Mindfulbreathing)
+
+summary(m_smd)
+forest(m_smd,
+       slab = Mindfulbreathing$Site)
+
+#Mindful Walking----------------------------------------------------------------
+
+St=Stai[Stai$group=="condition5bookchapter"|Stai$group=="condition1mindfulwalking",]
+f=aggregate(St$Stai_average, list(St$site,St$group), mean)
+f2=aggregate(St$Stai_average, list(St$site,St$group), sd)
+
+ff4=cbind(f,f2)
+ff4=ff4[,-c(4,5)]
+colnames(ff4)=c("Site","Group","Mean","Sd")
+gg=as.data.frame(table(St$site,St$group))
+colnames(gg)=c("Site","Group","Freq")
+ff44=merge(x=ff4,y=gg,by=c("Site","Group"))
+
+ff44
+
+#rename condition groups
+ff44 <- ff44 %>%
+  mutate(Group = case_when(
+    Group == "condition5bookchapter" ~ "Control",
+    Group == "condition4bodyscan" ~ "Body Scan",
+    Group == "condition3lovingkindness" ~ "Loving Kindness",
+    Group == "condition2mindfulbreathing" ~ "Mindful Breathing",
+    Group == "condition1mindfulwalking" ~ "Mindful Walking",
+    TRUE ~ Group  # Mantieni gli altri valori invariati
+  ))
+
+ff44 %>%
+  ggplot(aes(x=Mean, y=Site,size=Sd,col=Group)) +
+  geom_point(alpha=0.5) +
+  scale_size(range = c(.1, 9), name="Standard Deviation")+
+  labs(title="Control vs Mindful Walking")
+
+filtered_data <- ff44 %>% 
+  filter(Group %in% c("Mindful Walking", "Control"))
+
+# Define a color palette that is accessible to colorblind readers
+color_palette <- c("#FF7F0E", "#1F77B4") # Blue and orange colors
+
+filtered_data <- filtered_data %>%
+  mutate(Site = factor(Site, levels = rev(sort(unique(Site)))))
+
+# Plotting
+filtered_data %>%
+  ggplot(aes(x = Mean, y = Site, size = Sd, col = Group)) +
+  geom_point(alpha = 0.5) +
+  scale_size(range = c(0.1, 6), name = "Standard Deviation") +
+  scale_color_manual(values = color_palette) +  # Set the color palette manually
+  labs(title = "Control vs Mindful Walking") +
+  theme_minimal()  # Adjust the theme if necessary for better readability
+
+# Saving the plot as EPS file
+ggsave(filename = "MindfulWalking.eps", plot = p,
+       width = 6, height = 4, units = "in", dpi = 300, device = "eps")
+
+
+ff44 <- ff44[-c(7,8,41,42,43),]
+#Forest plot and test of heterogeneity for mindful walking vs control
+
+Bookchapter <- ff44 %>% filter (Group == "Control")
+Mindfulwalking <- ff44 %>% filter (Group == "Mindful Walking")
+
+Mindfulwalking  <- escalc(measure = "SMD", m1i = Bookchapter$Mean, m2i = Mindfulwalking$Mean, sd1i = Bookchapter$Sd, sd2i = Mindfulwalking$Sd, n1i = Bookchapter$Freq, n2i = Mindfulwalking$Freq, var.names = c("Es_mindfulwalking", "Se_mindfulwalking"), data = Mindfulwalking)
+Mindfulwalking  <- escalc(measure = "SMD", m1i = Mindfulwalking$Mean, m2i = Bookchapter$Mean, sd1i = Mindfulwalking$Sd, sd2i = Bookchapter$Sd, n1i = Mindfulwalking$Freq, n2i = Bookchapter$Freq, var.names = c("Es_mindfulwalking", "Se_mindfulwalking"), data = Mindfulwalking)
+
+m_smd <- rma.uni(yi = Es_mindfulwalking ,
+                 vi = Se_mindfulwalking ,
+                 data = Mindfulwalking)
+
+
+
+summary(m_smd)
+forest(m_smd,
+       slab = Mindfulwalking$Site)
+
+
+
+Non-confirmatory analyses-------------------------------------------------------
+
 
 #neuroticism
 results<-merge(x=Stai,y=ipip,by="responseid",all.x=TRUE)
-results=results[,c(1,2,3,4,26,33,53)]
+results=results[,c(1,2,3,4,27,5,55)]
 colnames(results)=c("responseid","group","site","story","Stai_average","eng_level","ipip_average")
-
 
 full <- lmBF(Stai_average ~ group +
                ipip_average +
@@ -619,13 +979,11 @@ full/noInteraction
 chainsFull <- posterior(full, iterations = 10000)
 summary(chainsFull[,1:7])
 
-################################################################################
-# Sequential bayesian graphs #
-################################################################################
 
-Stai=Stai[,c(1:4,26)]
+# Sequential bayesian graphs----------------------------------------------------
+
 name=c("condition2mindfulbreathing","condition5bookchapter")
-Stai1=Stai[(Stai$group %in% name)==T,]
+Stai1=Stai[(Stai$group %in% name)==T,c(1:4,27)]
 colnames(Stai1)=c("responseid","Group","Site","Story","Stress")
 BF=c()
 x=seq(0,890,10)
@@ -636,7 +994,7 @@ for (i in 1:length(x)){
 }
 v=x+10
 
-BFF=exp(BF) 
+BFF=exp(BF)
 bf=log10(BFF)
 dat=data.frame(bf,v)
 ggplot(data=dat, aes(x=v, y=bf)) +
@@ -645,10 +1003,8 @@ ggplot(data=dat, aes(x=v, y=bf)) +
   geom_hline(yintercept=-1, color = "red", size=0.5) +
   labs(x="Sample size",y="log10(Bayes Factor)",title="Control vs Mindful Breathing")
 
-
-Stai=Stai[,c(1:4,26)]
 name=c("condition1mindfulwalking","condition5bookchapter")
-Stai1=Stai[(Stai$group %in% name)==T,]
+Stai1=Stai[(Stai$group %in% name)==T,c(1:4,27)]
 colnames(Stai1)=c("responseid","Group","Site","Story","Stress")
 BF=c()
 x=seq(0,830,10)
@@ -659,8 +1015,8 @@ for (i in 1:length(x)){
 }
 v=x+10
 
-BFF=exp(BF) 
-bf=log10(BFF) 
+BFF=exp(BF)
+bf=log10(BFF)
 dat=data.frame(bf,v)
 ggplot(data=dat, aes(x=v, y=bf)) +
   geom_line()+
@@ -668,10 +1024,8 @@ ggplot(data=dat, aes(x=v, y=bf)) +
   geom_hline(yintercept=-1, color = "red", size=0.5) +
   labs(x="Sample size",y="log10(Bayes Factor)",title="Control vs Mindful Walking")
 
-
-Stai=Stai[,c(1:4,26)]
 name=c("condition3lovingkindness","condition5bookchapter")
-Stai1=Stai[(Stai$group %in% name)==T,]
+Stai1=Stai[(Stai$group %in% name)==T,c(1:4,27)]
 colnames(Stai1)=c("responseid","Group","Site","Story","Stress")
 BF=c()
 x=seq(0,840,10)
@@ -682,8 +1036,8 @@ for (i in 1:length(x)){
 }
 v=x+10
 
-BFF=exp(BF) 
-bf=log10(BFF) 
+BFF=exp(BF)
+bf=log10(BFF)
 dat=data.frame(bf,v)
 ggplot(data=dat, aes(x=v, y=bf)) +
   geom_line()+
@@ -691,10 +1045,8 @@ ggplot(data=dat, aes(x=v, y=bf)) +
   geom_hline(yintercept=-1, color = "red", size=0.5) +
   labs(x="Sample size",y="log10(Bayes Factor)",title="Control vs Loving-Kindness")
 
-
-Stai=Stai[,c(1:4,26)]
 name=c("condition4bodyscan","condition5bookchapter")
-Stai1=Stai[(Stai$group %in% name)==T,]
+Stai1=Stai[(Stai$group %in% name)==T,c(1:4,27)]
 colnames(Stai1)=c("responseid","Group","Site","Story","Stress")
 BF=c()
 x=seq(0,870,10)
@@ -705,8 +1057,8 @@ for (i in 1:length(x)){
 }
 v=x+10
 
-BFF=exp(BF) 
-bf=log10(BFF) 
+BFF=exp(BF)
+bf=log10(BFF)
 dat=data.frame(bf,v)
 ggplot(data=dat, aes(x=v, y=bf)) +
   geom_line()+
@@ -715,7 +1067,7 @@ ggplot(data=dat, aes(x=v, y=bf)) +
   labs(x="Sample size",y="log10(Bayes Factor)",title="Control vs Body Scan")
 
 
-#Following some lines of codes that can be useful 
+#Following some lines of codes that can be useful
 
 # data collection tracker
 # check how many participants for each groups
